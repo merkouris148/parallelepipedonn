@@ -1,6 +1,7 @@
  ![logo](./logo-white.png)
 
 *Computing Maximally Sound & Minimally Complete Interval Certifications for Multilayered Perceptrons*
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
 |                |                                                              |
 | -------------- | ------------------------------------------------------------ |
@@ -11,8 +12,6 @@
 | **Last Edit:** | 29/9/2025                                                    |
 
 ## LICENSE
-[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
-
 This work is licensed under a
 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
 
