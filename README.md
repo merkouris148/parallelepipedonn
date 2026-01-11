@@ -1,4 +1,4 @@
- ![logo](./logo.png)
+ ![logo](./logo-white.png)
 
 *Computing Maximally Sound & Minimally Complete Interval Certifications for Multilayered Perceptrons*
 
