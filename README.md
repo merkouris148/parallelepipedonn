@@ -7,8 +7,8 @@
 | **Author:**    | Merkouris Papamichail                                        |
 | **email:**     | mercoyris@ics.forth.gr                                       |
 | **Institute:** | Institute of Computer Science, Foundation for Research and Technology -- Hellas,<br/>Computer Science Department, University of Crete |
-| **Version:**   | 2.2.0.5                                                      |
-| **Last Edit:** | 14/1/2026                                                    |
+| **Version:**   | 2.2.0.5 |
+| **Last Edit:** | 14/1/2026 |
 
 ----
 
@@ -33,9 +33,64 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 ## Usage
 
+| Argument | Description | Example | Domain | Req. | Default |
+| -------- | ----------- | ------- | ------ | ------- | -------- |
+| `-x` | The path to input point x_star | `-x <x_star_path>.csv` | files | ✔ | |
+| `-c` | The class c_star of the input point x_star | `-c <c_star>` | int | ✔ | |
+| `-nn` | The path to the onnx representation of a NN | `-nn <onnx_description>.onnx` | ONNX file | ✔ | |
+| `-lb` | The path to lower bound csv file | `-lb <lb_path>.csv` | csv file | ✘ | |
+| `-ub` | The path to upper bound csv file | `-ub <lb_path>.csv` | csv file | ✘ | |
+| `-od` | output sub-directory, under `/outoputs/<subdir>/out.csv` | `-od <output-subdir>` | directory (will be created if not exists) | ✘ | `algo` (see bellow)|
+| `-ov` | Overwrite result-files if exist | | Boolean | ✘ | False |
+| `-si` | Save ub, lb as .png images, using output_dir | | Boolean | ✘ | False |
+| `-al` | The algorithm to be used | `-al <algo>` | (see supported algos bellow) | ✘ | `td`|
+| `-mi` | Max. number of iterations | `-mi <max_it>` | int | ✘ | 10,000 |
+| `-r` | The distance restriction radius | `-r <radius>` | float | ✘ | 1.0 |
+| `-d` | The percision parameter delta | `-d <delta>` | float | ✘ | 0.1 |
+| `-du` | The scalar of the domain's upper bound  | `-du <dom_ub>` | float | ✘ | 1.0 |
+| `-dl` | The scalar of the domain's lower bound  | `-dl <dom_lb>` | float | ✘ | 0.0 |
+| `-t` | Timeout | `-t <timeout (mins)>` | int | ✘ | 60 |
+| `-v` | The verifier to be used (sound or complete) | `-v <verif>` | `mara-sound`, `mara-complete` | ✘ | `mara-sound`|
+| `-no` | No output, suppress exporting computed lb, ub as csvs | | Boolean | ✘ | False |
+| `-sr` | Simple results, outputing results as numbers in stdout | | Boolean | ✘ | False |
+| `-q` | Quiet, supress output | | Boolean | ✘ | False |
+| `-h` | Help, print help | | Witout args, or `al`: list supported algos, `pc`: list path conventions, `v`: list supported verifiers | ✘ | |
+
+### Supported Algorithms
+
+Bellow we list the supported algorithms. We mark as *tested* the algorithms that have been extensivly tested and evaluated. The other algorithms are in working condition, but may be *extremely* slow, even for small NN. These algorithms are listed here for completeness.
+
+| Arguments | Description | Sound/Complete | Tested |
+| --------- | ----------- | -------------- | ------ |
+| `bu-l-dfs` | Bottom-Up Linear DFS | **S** | ✘ |
+| `bu-d-dfs` | Bottom-Up Dichotomic DFS | **S** | ✔ |
+| `bu-bfs` | Bottom-Up BFS | **S** | ✘ |
+| `td` | Top-Down | **S** | ✘ |
+| `c-bu-l` | Cyclic Bottom-Up Linear | **S** | ✘ |
+| `c-bu-d` | Cyclic Bottom-Up Dichotomic | **S** | ✔ |
+| `c-td` | Cyclic Top-Down | **S** | ✔ |
+| `td+bu-l-dfs` | Top-Down + Bottom-Up Linear DFS | **S** | ✘ |
+| `td+bu-d-dfs` | Top-Down + Bottom-Up Dichotomic DFS | **S** | ✔ |
+| `td+bu-bfs` | Top-Down + Bottom-Up BFS | **S** | ✘ |
+| `c-bu-l+bu-l-dfs` | Cyclic Bottom-Up Linear + Bottom-Up Linear DFS | **S** | ✘ |
+| `c-bu-l+bu-d-dfs` | Cyclic Bottom-Up Linear + Bottom-Up Dichotomic DFS | **S** | ✘ |
+| `c-bu-l+bu-bfs` | Cyclic Bottom-Up Linear + Bottom-Up BFS | **S** | ✘ |
+| `c-bu-d+bu-l-dfs` | Cyclic Bottom-Up Dichotomic + Bottom-Up Linear DFS | **S** | ✘ |
+| `c-bu-d+bu-d-dfs` | Cyclic Bottom-Up Dichotomic + Bottom-Up Dichotomic DFS | **S** | ✘ |
+| `c-bu-d+bu-bfs` | Cyclic Bottom-Up Dichotomic + Bottom-Up BFS | **S** | ✘ |
+| `c-td+bu-l-dfs` | Cyclic Top-Down + Bottom-Up Linear DFS | **S** | ✘ |
+| `c-td+bu-d-dfs` | Cyclic Top-Down + Bottom-Up Dichotomic DFS | **S** | ✘ |
+| `c-td+bu-bfs` | Cyclic Top-Down + Bottom-Up BFS | **S** | ✘ |
+| `complete-bu` | Complete Bottom-Up | **C** | ✔ |
+| `complete-c-d-bu` | Complete Cyclic Dichotomic Bottom Up | **C** | ✔ |
+
+*For the complete algorithms the argument `-v mara-complete` must be used.*
+
 ## Experiments
 
 ### SetUp
+
+For our experiments we randomly choose 50 MNIST images from MNIST's Test Set, 5 from each of the 10 classes. Bellow, we list the *Hardware, Parameters*, and the *MNIST Neural Network*, we used in our examples. Note that we normalized the dataset, s.t. each image belongs to the $[0, 1]^{784}$. The NN has been trained on the normalized dataset.
 
 #### Hardware
 
@@ -48,16 +103,20 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 #### Parameters
 
+The parameters bellow are common for each of the algorithms we test. Note that, since we use distance restriction of 1, our algorithm is essentially *not* distance restricted. Finally, observe that the *dichotomic* algorithms are not that sensitive to the rercision constant $\delta$.
+
 | Parameter Desc.| CLI Argument | Value |
 | ------------ | --------- | ----- |
 | Percision constant $\delta$ | `-d` | 0.1 |
-| Timeout | `-t` | 60 |
+| Timeout | `-t` | 60 (min) |
 | Max. Number of Iterations| `-mi` | 10,000 |
 | Domain lower bound | `-dl` | 0.0 |
 | Domain upper bound | `-du` | 1.0 |
 | Distance restriction | `-r` | 1.0 |
 
 #### Neural Network
+
+The Neural Network we used is discribed bellow.
 
 | Parameters Desc. | Values |
 | - | - |
@@ -76,7 +135,7 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 | Algorithm | Min. Value | Average | Max. Value | Std Dev. | Timeouts |
 | --------- | ---------- | ------- | ---------- | -------- | -------- |
-| BU Dich. |
+| BU Dich. | 11.27 (min) | 32.78 (min) | 67.95 (min) | 18.02 (min) | 13 |
 |Top Down | 8.97 (min) | 51.13 (min) | 62.54 (min) | 14.64 (min) | 28 |
 | TD + BU Dich. | +4.04 (min) | +42.036 (min) | +65.72 (min) | 21.77 (min) | 25 |
 | Cyclic BU Dich. | 1.05 (sec) |21.06 (sec) | 149.26 (sec) | 27.28 (sec) | 0 |
@@ -88,7 +147,7 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 | Algorithm | Min. Value | Average | Max. Value | Std Dev. | Avg. Time/Call | Verification/Overal Time Ratio (%) |
 | --------- | ---------- | ------- | ---------- | -------- | -------- | ---- |
-| BU Dich. |
+| BU Dich. | 1272 | 2963.86 | 3261 | 55.28 | 0.64 (sec) | 96% |
 |Top Down | 1711 | 3753.02 | 4862 | 708.15 | 0.78 (sec) | 95% |
 | TD + BU Dich. | +10 | +1030.55 | +2569 | +927.37 | 2.41 (sec) | 98% |
 | Cyclic BU Dich. | 4 | 4 | 4 | 0 | 5.23 (sec) | 99% |
@@ -99,7 +158,7 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 | Algorithm | Min. Value | Average | Max. Value | Std Dev. |
 | --------- | ---------- | ------- | ---------- | -------- |
-| BU Dich. |
+| BU Dich. | 0 | 0 | 0 | 0 |
 |Top Down | 0 | 0.13 | 0.4 | 0.08 |
 | TD + BU Dich. | 0 | 0.13 | 0.4 | 0.08 |
 | Cyclic BU Dich. | 0 | 0.07 | 0.19 | 0.05 |
