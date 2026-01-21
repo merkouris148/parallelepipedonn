@@ -73,7 +73,7 @@ class MarabouVerification(nn_verif.NNVerification):
         ## create options
         self.options = Marabou.createOptions(   
                                                 numWorkers      = 8,
-                                                timeoutInSeconds= 120,
+                                                timeoutInSeconds= 360,
                                                 verbosity       = 0,
                                                 # BE CAREFUL Gurobi does NOT support
                                                 # disjunction of constraints.
