@@ -52,7 +52,8 @@ def get_random_vertex(
 def adversarial_attack(
         lb          : np.ndarray,
         ub          : np.ndarray,
-        nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        #nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        nn_model,
         c_star      : int,
         num_samples : int = 1000,
         p           : float = 0.0
@@ -89,7 +90,8 @@ def adversarial_attack(
 def fidelity(
         lb          : np.ndarray,
         ub          : np.ndarray,
-        nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        #nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        nn_model,
         c_star      :int,
         num_samples :int =1000
     ) -> float:
@@ -172,7 +174,8 @@ def volume_approximation(
 def noise_analysis(
         lb          : np.ndarray,
         ub          : np.ndarray,
-        nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        #nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        nn_model,
         num_classes : int,
         num_samples : int = 1000
     ):
@@ -197,7 +200,8 @@ def noise_analysis(
 
 
 def evaluate(
-        nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        #nn_model    : typing.Union[nn.MNISTNeuralNetwork, nn_verif.NNVerification],
+        nn_model,
         X           : np.ndarray,
         Y           : np.ndarray,
         shuffle     : bool  = False,
