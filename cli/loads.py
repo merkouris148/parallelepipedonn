@@ -203,6 +203,7 @@ load = {
         args.delta:       lambda argv: load_optional_float(argv, args.cli_args[args.optional][args.delta]),
         args.dom_lb:      lambda argv: load_optional_float(argv, args.cli_args[args.optional][args.dom_lb]),
         args.dom_ub:      lambda argv: load_optional_float(argv, args.cli_args[args.optional][args.dom_ub]),
+        args.timeout:     lambda argv: load_optional_int(argv, args.cli_args[args.optional][args.timeout]),
         
         # Interface
         args.no_out:      lambda argv: load_optional_bool(argv, args.cli_args[args.optional][args.no_out]),

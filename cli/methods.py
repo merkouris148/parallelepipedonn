@@ -32,11 +32,12 @@ def init_bottom_up_linear_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     return  psg.BottomDistParallelGurantee(x_star, c_star, rad, delta, domain),\
-            palgos.BottomUpLinearDFS(isSAT, max_it, verbose)
+            palgos.BottomUpLinearDFS(isSAT, max_it, timeout, verbose)
 
 
 def init_bottom_up_dichotomic_dfs(
@@ -47,11 +48,12 @@ def init_bottom_up_dichotomic_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     return  psg.BottomDistParallelGurantee(x_star, c_star, rad, delta, domain),\
-            palgos.BottomUpDichotomicDFS(isSAT, max_it, verbose)
+            palgos.BottomUpDichotomicDFS(isSAT, max_it, timeout, verbose)
 
 
 def init_bottom_up_bfs(
@@ -62,11 +64,12 @@ def init_bottom_up_bfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     return  psg.BottomDistParallelGurantee(x_star, c_star, rad, delta, domain),\
-            palgos.BottomUpBFS(isSAT, max_it, verbose)
+            palgos.BottomUpBFS(isSAT, max_it, timeout, verbose)
 
 
 
@@ -80,11 +83,12 @@ def init_top_down(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     return  psg.TopDistParallelGurantee(x_star, c_star, rad, delta, domain),\
-            palgos.TopDownSearch(isSAT, max_it, verbose)
+            palgos.TopDownSearch(isSAT, max_it, timeout, verbose)
 
 
 
@@ -129,12 +133,13 @@ def init_td_n_bu_l_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     guarantee  = psg.TopDistParallelGurantee(x_star, c_star, rad, delta, domain)
-    algo1      = palgos.TopDownSearch(isSAT, max_it, verbose)
-    algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), verbose)
+    algo1      = palgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+    algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), timeout, verbose)
     algo       = comp.ParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
     return  guarantee, algo
@@ -149,12 +154,13 @@ def init_td_n_bu_d_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     guarantee  = psg.TopDistParallelGurantee(x_star, c_star, rad, delta, domain)
-    algo1      = palgos.TopDownSearch(isSAT, max_it, verbose)
-    algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), verbose)
+    algo1      = palgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+    algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), timeout, verbose)
     algo       = comp.ParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
     return  guarantee, algo
@@ -168,12 +174,13 @@ def init_td_n_bu_bfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     guarantee  = psg.TopDistParallelGurantee(x_star, c_star, rad, delta, domain)
-    algo1      = palgos.TopDownSearch(isSAT, max_it, verbose)
-    algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), verbose)
+    algo1      = palgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+    algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), timeout, verbose)
     algo       = comp.ParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
     return  guarantee, algo
@@ -195,11 +202,12 @@ def init_cyclic_bottom_up_linear(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
     return  csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain),\
-            calgos.BottomUpLinearSearch(isSAT, max_it, verbose)
+            calgos.BottomUpLinearSearch(isSAT, max_it, timeout, verbose)
 
 
 def init_cyclic_bottom_up_dichotomic(
@@ -210,11 +218,12 @@ def init_cyclic_bottom_up_dichotomic(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
     return  csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain),\
-            calgos.BottomUpDichotomicSearch(isSAT, max_it, verbose)
+            calgos.BottomUpDichotomicSearch(isSAT, max_it, timeout, verbose)
 
 
 
@@ -228,11 +237,12 @@ def init_cyclic_top_down(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
     return  csg.TopCyclicGuarantee(x_star, c_star, rad, delta, domain),\
-            calgos.TopDownSearch(isSAT, max_it, verbose)
+            calgos.TopDownSearch(isSAT, max_it, timeout, verbose)
 
 
 
@@ -276,12 +286,13 @@ def init_cbu_l_n_bu_l_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -295,12 +306,13 @@ def init_cbu_l_n_bu_d_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta),  timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -314,12 +326,13 @@ def init_cbu_l_n_bu_bfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpLinearSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -337,12 +350,13 @@ def init_cbu_d_n_bu_l_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -356,12 +370,13 @@ def init_cbu_d_n_bu_d_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -375,12 +390,13 @@ def init_cbu_d_n_bu_bfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.BottomUpDichotomicSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -396,12 +412,13 @@ def init_ctd_n_bu_l_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.TopDownSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpLinearDFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -415,12 +432,13 @@ def init_ctd_n_bu_d_dfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.TopDownSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpDichotomicDFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -434,12 +452,13 @@ def init_ctd_n_bu_bfs(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
 
         guarantee  = csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain)
-        algo1      = calgos.TopDownSearch(isSAT, max_it, verbose)
-        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), verbose)
+        algo1      = calgos.TopDownSearch(isSAT, max_it, timeout, verbose)
+        algo2      = palgos.BottomUpBFS(isSAT, int(rad/delta), timeout, verbose)
         algo       = comp.CyclicParallelAlgoComposition(algo1, algo2, isSAT, max_it, verbose)
 
         return  guarantee, algo
@@ -454,11 +473,28 @@ def init_complete_bu(
         domain:     geom.Interval,
         isSAT:      nn_verif.NNVerification,
         max_it:     int,
+        timeout:    int,
         verbose:    bool
     ) -> typing.Tuple[psg.ParallelepipedalGuarantee, algos.SearchAlgorithm]:
 
     return  psg.BottomDistParallelGurantee(x_star, c_star, rad, delta, domain),\
-            palgos.CompleteBottomUpSearch(isSAT, max_it, verbose)
+            palgos.CompleteBottomUpSearch(isSAT, max_it, timeout, verbose)
+
+
+def init_complete_c_d_bu(
+        x_star:     np.ndarray,
+        c_star:     int,
+        rad:        float,
+        delta:      float,
+        domain:     geom.Interval,
+        isSAT:      nn_verif.NNVerification,
+        max_it:     int,
+        timeout:    int,
+        verbose:    bool
+    ) -> typing.Tuple[csg.CyclicGuarantee, algos.SearchAlgorithm]:
+
+    return  csg.BottomCyclicGuarantee(x_star, c_star, rad, delta, domain),\
+            calgos.CompleteBottomUpDichotomicSearch(isSAT, max_it, timeout, verbose)
 
 
 ###############
@@ -497,7 +533,7 @@ ctd_n_bu_bfs                = 18
 
 ## Algorithms for Complete Approximations
 complete_bu                 = 19
-
+complete_c_d_bu             = 20
 
 ## Types, types, types.. types everywhere
 GuaranteeUnion_t    = typing.Union[
@@ -512,6 +548,7 @@ InitMethod_t        = typing.Callable[
                                       float,
                                       geom.Interval,
                                       nn_verif.NNVerification,
+                                      int,
                                       int,
                                       bool
                                 ],
@@ -552,5 +589,6 @@ init_method: typing.Dict[int, InitMethod_t] = {
     ctd_n_bu_bfs:                   init_ctd_n_bu_bfs,
 
     ## Algorithms for Complete Approximations
-    complete_bu:                    init_complete_bu
+    complete_bu:                    init_complete_bu,
+    complete_c_d_bu:                init_complete_c_d_bu
 }

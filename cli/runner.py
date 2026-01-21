@@ -41,6 +41,7 @@ class Runner(loader.Loader):
             self[args.delta],
             self[args.dom_lb],
             self[args.dom_ub],
+            self[args.timeout],
             not self[args.quiet],
             " ",
             self[args.lb_path],

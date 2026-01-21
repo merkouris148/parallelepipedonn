@@ -39,7 +39,8 @@ algo_args = {
     methods.ctd_n_bu_bfs:                   "c-td+bu-bfs",
 
     ## Methods for Complete Approximations
-    methods.complete_bu:                    "complete-bu"
+    methods.complete_bu:                    "complete-bu",
+    methods.complete_c_d_bu:                "complete-c-d-bu"
 }
 
 args_algo = {
@@ -73,7 +74,8 @@ args_algo = {
     algo_args[methods.ctd_n_bu_bfs]:                methods.ctd_n_bu_bfs,
 
     ## Methods for Complete Approximations
-    algo_args[methods.complete_bu]:                 methods.complete_bu
+    algo_args[methods.complete_bu]:                 methods.complete_bu,
+    algo_args[methods.complete_c_d_bu]:             methods.complete_c_d_bu
 }
 
 
@@ -119,6 +121,7 @@ simple_res     = 15
 quiet          = 16
 help           = 17
 verif          = 18
+timeout        = 19
 
 
 cli_args = {
@@ -148,6 +151,7 @@ cli_args = {
         delta:          "-d",
         dom_ub:         "-du",
         dom_lb:         "-dl",
+        timeout:        "-t",
 
         # Verifier
         verif:          "-v",
@@ -219,6 +223,7 @@ defaults = {
         delta:          0.1,
         dom_lb:         0,
         dom_ub:         1,
+        timeout:        60,
 
         # Interface
         no_out:         False,

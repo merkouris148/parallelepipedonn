@@ -43,6 +43,9 @@ error_unkown_error                  = 19
 # verifiers
 error_unknown_verif                 = 20
 
+# timer
+error_timer_not_pos_int             = 21
+
 
 
 error_messages = {
@@ -79,6 +82,7 @@ error_messages = {
     error_delta_g_radius:                   "Delta greater than radius!",
     error_dom_lb_no_float:                  "The domain lower bound parameter in not a float!",
     error_dom_ub_no_float:                  "The domain upper bound parameter in not a float!",
+    error_timer_not_pos_int:                "Timeout is not a positive integer!",
 
     # interface
     error_unknown_help_arg:                 "Unknown help argument!",

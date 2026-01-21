@@ -84,12 +84,6 @@ def check_out_dir(argv: typing.List[str]) -> typing.Tuple[bool, int]:
     return False, errors.error_all_ok
 
 
-# def check_over_out(argv: typing.List[str]) -> typing.Tuple[bool, int]:
-#     return check_no_errors(argv)
-
-# def check_save_images(argv: typing.List[str]) -> typing.Tuple[bool, int]:
-#     return check_no_errors(argv)
-
 
 # Verifiers
 def check_verifier(argv: typing.List[str]) -> typing.Tuple[bool, int]:
@@ -118,7 +112,7 @@ def check_max_it(argv: typing.List[str]) -> typing.Tuple[bool, int]:
     if args.cli_args[args.optional][args.help] in argv:                                             return False, errors.error_all_ok
 
     if not args.cli_args[args.optional][args.max_it] in argv:                                       return False, errors.error_all_ok
-    if not argv[argv.index(args.cli_args[args.optional][args.max_it]) + 1].isnumeric():   return True,  errors.error_max_it_not_int
+    if not argv[argv.index(args.cli_args[args.optional][args.max_it]) + 1].isnumeric():             return True,  errors.error_max_it_not_int
 
     return False, errors.error_all_ok
 
@@ -170,15 +164,16 @@ def check_dom_ub(argv: typing.List[str]) -> typing.Tuple[bool, int]:
     return False, errors.error_all_ok
 
 
-# Interface
-# def check_no_out(argv: typing.List[str]) -> typing.Tuple[bool, int]:
-#     return check_no_errors(argv)
+def check_timeout(argv: typing.List[str]) -> typing.Tuple[bool, int]:
+    # overwrite checks if help arg is provided
+    if args.cli_args[args.optional][args.help] in argv:                                     return False, errors.error_all_ok
 
-# def check_simple_ress(argv: typing.List[str]) -> typing.Tuple[bool, int]:
-#     return check_no_errors(argv)
+    if not args.cli_args[args.optional][args.timeout] in argv:                              return False, errors.error_all_ok
+    if not argv[argv.index(args.cli_args[args.optional][args.timeout]) + 1].isnumeric():    return True,  errors.error_timer_not_pos_int
 
-# def check_quiet(argv: typing.List[str]) -> typing.Tuple[bool, int]:
-#     return check_no_errors(argv)
+    return False, errors.error_all_ok
+
+
 
 def check_help(argv: typing.List[str]) -> typing.Tuple[bool, int]:
     if not args.cli_args[args.optional][args.help] in argv:    return False, errors.error_all_ok   # no -h argument was given
@@ -221,6 +216,7 @@ check_argument = {
         args.delta:          check_delta,
         args.dom_ub:         check_dom_lb,
         args.dom_lb:         check_dom_ub,
+        args.timeout:        check_timeout,
         
         # Interface
         args.no_out:         check_no_errors,

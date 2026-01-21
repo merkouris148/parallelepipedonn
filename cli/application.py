@@ -8,6 +8,7 @@
 
 ## Python Libraries
 import os
+import sys
 
 ## 3rd Party Libraries
 import numpy as np
@@ -73,6 +74,9 @@ class Application:
             #   [dom_lb * 1, dom_ub * 1]
             dom_lb:         float,  # domains scalar lb
             dom_ub:         float,  # domains scalar ub
+            
+            # timeout
+            timeout:        int,
 
             ## Verbose
             verbose:        bool,
@@ -111,6 +115,7 @@ class Application:
 
         ## Guarantee instance
         self.x_star = np.genfromtxt(x_star_path, delimiter=delimeter)
+        print("x_star shape: ", self.x_star.shape, file=sys.stderr)
         self.c_star = c_star
 
         ## Algo parameters
@@ -127,6 +132,8 @@ class Application:
             self.dom_ub * np.ones(self.x_star.shape)
         )
 
+        ## Timeout
+        self.timeout = timeout
 
 
         #########################
@@ -163,6 +170,7 @@ class Application:
                     self.domain,
                     self.isSAT,
                     self.max_it,
+                    self.timeout,
                     self.verbose
             )
         else: errors.print_error_message(errors.error_unknown_method)
@@ -265,7 +273,7 @@ class Application:
     ###########
     def print_input(self):
         print("\n# I/O Info")
-        print("-----------")
+        print("=" * 60)
         print(f"{'Input:':<23}"                 + self.x_star_path)
         print(f"{'ONNX Descr.:':<23}"           + self.onnx_path)
         print(f"{'Output Path Pfx:':<23}"       + self.output_path)
@@ -275,9 +283,10 @@ class Application:
 
     def print_setup(self):
         print("\n# Setup")
-        print("--------")
+        print("=" * 60)
         print(f"{'Method:':<22}"                + self.algo.msg_prefix)
         print(f"{'Max. It.:':<22}"              + str(self.algo.max_it))
+        print(f"{'Set Timeout:':<22}"           + str(self.algo.timeout) + " (mins)")
         if isinstance(self.guarantee, csg.CyclicGuarantee):
             print(f"{'Radius Dist. Restr.:':<22}"   + str(self.guarantee.distance_restriction))
         else:
@@ -288,10 +297,10 @@ class Application:
     def print_results(self):
         print("-" * 60 + "\n")
         print("\n# Results")
-        print("----------")
-        print(f"{'Num. It.:':<20}"          + str(self.algo.num_it))
-        print(f"{'Time:':<20}"              + str(round(self.algo.total_time, 2)) + " (secs)")
-        print(f"{'Comp.:':<20}"             + str(self.guarantee.calc_complexity()))
+        print("=" * 60)
+        print(f"{'Num. It.:':<22}"          + str(self.algo.num_it))
+        print(f"{'Time:':<22}"              + str(round(self.algo.total_time, 2)) + " (secs)")
+        print(f"{'Comp.:':<22}"             + str(self.guarantee.calc_complexity()))
         min_edge_len = None
         if isinstance(self.guarantee, csg.CyclicGuarantee):
             interval = self.guarantee.get_interval()
@@ -299,11 +308,14 @@ class Application:
             min_edge_len = interval.min_edge_length()
         else:
             min_edge_len = self.guarantee.min_edge_length()
-        print(f"{'Min. Edge Length:':<20}"      + str(round(min_edge_len, 4)))
-        print(f"{'Verif. Time:':<20}"           + str(round(self.isSAT.get_total_time(), 2)) + " (secs)")
-        print(f"{'Verif. Num. Calls:':<20}"     + str(self.isSAT.get_num_calls()))
-        print(f"{'Verif. Avg Time:':<20}"       + str(round(self.isSAT.get_avg_time(), 2)) + " (secs)")
-        print(f"{'Verif. Time Perc.:':<20}"     + str(round(self.isSAT.get_total_time() / self.algo.total_time, 4) * 100) + "%")
+        print(f"{'Min. Edge Length:':<22}"      + str(round(min_edge_len, 4)))
+        print(f"{'Timeout:':<22}"               + str(self.algo.is_timeout))
+        print("-" * 60)
+        print(f"{'Verif. Timeouts:':<22}"       + str(self.isSAT.get_timeouts()))
+        print(f"{'Verif. Time:':<22}"           + str(round(self.isSAT.get_total_time(), 2)) + " (secs)")
+        print(f"{'Verif. Num. Calls:':<22}"     + str(self.isSAT.get_num_calls()))
+        print(f"{'Verif. Avg Time:':<22}"       + str(round(self.isSAT.get_avg_time(), 2)) + " (secs)")
+        print(f"{'Verif. Time Perc.:':<22}"     + str(round(self.isSAT.get_total_time() / self.algo.total_time, 4) * 100) + "%")
     
 
     def print_simple_results(self):
@@ -315,12 +327,13 @@ class Application:
         else:
             min_edge_len = self.guarantee.min_edge_length()
 
-        simple_res =    str(self.algo.num_it)                                           + " " +\
-                        str(round(self.algo.total_time, 2))                             + " " +\
-                        str(self.guarantee.calc_complexity())                           + " " +\
-                        str(round(min_edge_len, 4))                                     + " " +\
-                        str(round(self.isSAT.get_total_time(), 2))                      + " " +\
-                        str(self.isSAT.get_num_calls())                                 
+        simple_res =    str(self.algo.num_it)                       + " "   # Num. of Iterations
+        simple_res +=   str(round(self.algo.total_time, 2))         + " "   # CPU time
+        simple_res +=   str(self.guarantee.calc_complexity())       + " "   # Complexity
+        simple_res +=   str(round(min_edge_len, 4))                 + " "   # Min. Edge Length
+        simple_res +=   str(round(self.isSAT.get_total_time(), 2))  + " "   # Verif. Total Time
+        simple_res +=   str(self.isSAT.get_num_calls())             + " "   # Verif. Num. of Calls
+        simple_res +=   str(int(self.algo.is_timeout))                      # Timeout
         
         print(simple_res)
 

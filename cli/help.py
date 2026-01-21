@@ -35,6 +35,9 @@ help_msg = {
         # Domain
         args.dom_lb:        "the scalar of the domain's lower bound",
         args.dom_ub:        "the scalar of the domain's upper bound",
+
+        # Timeout
+        args.timeout:       "timeout for the algorithm",
         
         # Interface
         args.no_out:        "no output, suppress exporting computed lb, ub as csvs",
@@ -74,6 +77,7 @@ example_msg = {
         args.max_it:        "<max_it>",
         args.rad:           "<rad>",
         args.delta:         "<delta>",
+        args.timeout:       "<timeout (mins)>",
         
         # Domain
         args.dom_lb:        "<dom_lb>",
@@ -124,6 +128,7 @@ domain_msg = {
         # Domain
         args.dom_lb:        "float",
         args.dom_ub:        "float",
+        args.timeout:       "integer",
         
         # Interface
         args.no_out:        None,
@@ -131,8 +136,9 @@ domain_msg = {
         args.quiet:         None,
         
         # Help
-        args.help:          args.help_args[args.help_algos]     + ": algorithms" + " " +\
-                            args.help_args[args.help_path_conv] + ": path conventions."
+        args.help:          args.help_args[args.help_algos]     + ": algorithms " +\
+                            args.help_args[args.help_path_conv] + ": path conventions "+\
+                            args.help_args[args.help_verifs]    + ": supported verifiers."
     }
 }
 
@@ -165,7 +171,8 @@ default_msg = {
         args.max_it:        "10_000",
         args.rad:           "1.0",
         args.delta:         "0.1",
-        
+        args.timeout:       "60",
+
         # Domain
         args.dom_lb:        "0.0",
         args.dom_ub:        "1.0",
@@ -257,7 +264,8 @@ help_algo_msg = {
     methods.ctd_n_bu_bfs:                   "Cyclic Top-Down + Bottom-Up BFS",
 
     ## Methods for Complete Approximations
-    methods.complete_bu:                    "Complete Bottom-Up"
+    methods.complete_bu:                    "Complete Bottom-Up",
+    methods.complete_c_d_bu:                "Complete Cyclic Dich. Bottom Up"
 }
 
 
