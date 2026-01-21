@@ -60,8 +60,8 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 Bellow we list the supported algorithms. We mark as *tested* the algorithms that have been extensivly tested and evaluated. The other algorithms are in working condition, but may be *extremely* slow, even for small NN. These algorithms are listed here for completeness.
 
-| Arguments | Description | Sound/Complete | Tested |
-| --------- | ----------- | -------------- | ------ |
+| Arguments | Description | Sound/Complete | Recommended |
+| --------- | ----------- | :------------: | :----: |
 | `bu-l-dfs` | Bottom-Up Linear DFS | **S** | ✘ |
 | `bu-d-dfs` | Bottom-Up Dichotomic DFS | **S** | ✔ |
 | `bu-bfs` | Bottom-Up BFS | **S** | ✘ |
@@ -100,6 +100,7 @@ For our experiments we randomly choose 50 MNIST images from MNIST's Test Set, 5 
 | **CPU**           |  Intel Xeon E5-2640 v4    |
 | **Clock Speed**   | 2.394GHz                  |
 | **Num. Cores**    | 35                        |
+| **RAM** | 128GB |
 
 #### Parameters
 
@@ -114,13 +115,15 @@ The parameters bellow are common for each of the algorithms we test. Note that, 
 | Domain upper bound | `-du` | 1.0 |
 | Distance restriction | `-r` | 1.0 |
 
-#### Neural Network
+Dichotomic algorithms are *less* sensitive to the $\delta$ value.
 
-The Neural Network we used is discribed bellow.
+#### Neural Networks
+
+The Neural Networks we used is discribed bellow.
 
 | Parameters Desc. | Values |
 | - | - |
-| **Dataset**       | MNIST                     |
+| **Datasets**      | MNIST, Fashion MNIST      |
 | **Opt. Algo.**    | Adam                      |
 | **Weight Init.**  | Glorot & Bengio (2010)    |
 | **In. Dim.**      | 784                       |
@@ -128,43 +131,79 @@ The Neural Network we used is discribed bellow.
 | **Linear Layer**  | 10                        |
 | **Out. Dim.**     | 10                        |
 | **# Trainable Parameters** | 25,450 |
-| **Accuracy**      | 94%                       |
+| **Accuracy**      | **MNIST:** 94% **Fashion MNIST:** 82% |
 
 ### Results
 
-#### CPU Time
+#### MNIST
+
+##### CPU Time
 
 | Algorithm | Min. Value | Average | Max. Value | Std Dev. | Timeouts |
-| --------- | ---------- | ------- | ---------- | -------- | -------- |
+| --------- | :--------: | :-----: | :--------: | :------: | :------: |
 | BU Dich. | 11.27 (min) | 32.78 (min) | 67.95 (min) | 18.02 (min) | 13 |
 |Top Down | 8.97 (min) | 51.13 (min) | 62.54 (min) | 14.64 (min) | 28 |
 | TD + BU Dich. | +4.04 (min) | +42.036 (min) | +65.72 (min) | 21.77 (min) | 25 |
 | Cyclic BU Dich. | 1.05 (sec) |21.06 (sec) | 149.26 (sec) | 27.28 (sec) | 0 |
-| Comp. BU Dich. | 30.29 (min) | 38.54 (min) | 49.70 (min) | 5.78 (min) | 0 |
+| Comp. BU | 30.29 (min) | 38.54 (min) | 49.70 (min) | 5.78 (min) | 0 |
 | Comp. Cyclic BU Dich. | 2.82 (sec) | 3.92 (sec) | 4.83 (sec) | 0.55 (sec) | 0 |
 
-
-#### Verification Oracle Calls
+##### Verification Oracle Calls
 
 | Algorithm | Min. Value | Average | Max. Value | Std Dev. | Avg. Time/Call | Verification/Overal Time Ratio (%) |
-| --------- | ---------- | ------- | ---------- | -------- | -------- | ---- |
+| --------- | :--------: | :-----: | :--------: | :------: | :------: | :--: |
 | BU Dich. | 1272 | 2963.86 | 3261 | 55.28 | 0.64 (sec) | 96% |
 |Top Down | 1711 | 3753.02 | 4862 | 708.15 | 0.78 (sec) | 95% |
 | TD + BU Dich. | +10 | +1030.55 | +2569 | +927.37 | 2.41 (sec) | 98% |
 | Cyclic BU Dich. | 4 | 4 | 4 | 0 | 5.23 (sec) | 99% |
-| Comp. BU Dich. | 1794 | 2085.73 | 2529 | 172.39 | 1.06 (sec) | 96% |
+| Comp. BU | 1794 | 2085.73 | 2529 | 172.39 | 1.06 (sec) | 96% |
 | Comp. Cyclic BU Dich. | 4 | 4 | 4 | 0 | 0.94 (sec) | 96% |
 
-#### Minimum Edge Length
+##### Minimum Edge Length
 
-| Algorithm | Min. Value | Average | Max. Value | Std Dev. |
-| --------- | ---------- | ------- | ---------- | -------- |
-| BU Dich. | 0 | 0 | 0 | 0 |
-|Top Down | 0 | 0.13 | 0.4 | 0.08 |
-| TD + BU Dich. | 0 | 0.13 | 0.4 | 0.08 |
-| Cyclic BU Dich. | 0 | 0.07 | 0.19 | 0.05 |
-| Comp. BU Dich. | 0.9 | 0.99 | 1.0 | 0.02 |
-| Comp. Cyclic BU Dich. | 0.94 | 0.94 | 0.94 | 0 |
+| Algorithm | Min. Value | Average | Max. Value | Std Dev. | # Non-Trivials |
+| --------- | :--------: | :-----: | :--------: | :------: | :------: |
+| BU Dich. | 0 | 0 | 0 | 0 | 0 |
+|Top Down | 0 | 0.13 | 0.4 | 0.08 | 48 |
+| TD + BU Dich. | 0 | 0.13 | 0.4 | 0.08 | 48 |
+| Cyclic BU Dich. | 0 | 0.07 | 0.19 | 0.05 | 36 |
+| Comp. BU | 0.9 | 0.99 | 1.0 | 0.02 | 11 |
+| Comp. Cyclic BU Dich. | 0.94 | 0.94 | 0.94 | 0 | 49 |
+
+#### Fashion MNIST
+
+##### CPU Time
+
+| Algorithm             | Min. Value  |   Average    |  Max. Value  |  Std Dev.   | Timeouts |
+| --------------------- | :---------: | :----------: | :----------: | :---------: | :------: |
+| BU Dich.              | 10.38 (min) | 22.82 (min)  | 60.03 (min)  | 13.27 (min) |    1     |
+| Top Down              | 13.48 (min) | 50.17 (min)  | 61.15 (min)  | 15.31 (min) |    32    |
+| TD + BU Dich.         | +6.52 (min) | +23.91 (min) | +60.01 (min) |  13 (min)   |    1     |
+| Cyclic BU Dich.       | 0.76 (sec)  |  5.15 (sec)  | 28.48 (sec)  |  6.1 (sec)  |    0     |
+| Comp. BU              | 17.1 (min)  | 23.82 (min)  | 30.87 (min)  | 3.45 (min)  |    0     |
+| Comp. Cyclic BU Dich. | 2.42 (sec)  |  3.52 (sec)  |  4.47 (sec)  | 0.63 (sec)  |    0     |
+
+##### Verification Oracle Calls
+
+| Algorithm             | Min. Value | Average  | Max. Value | Std Dev. | Avg. Time/Call | Verification/Overal Time Ratio (%) |
+| --------------------- | :--------: | :------: | :--------: | :------: | :------------: | :--------------------------------: |
+| BU Dich.              |    1450    | 3469.48  |    4040    |  390.51  |   0.36 (sec)   |                92%                 |
+| Top Down              |    1343    | 3272.76  |    5062    |  724.22  |   0.88 (sec)   |                96%                 |
+| TD + BU Dich.         |    +819    | +1779.34 |   +2757    |  386.36  |   0.77 (sec)   |                96%                 |
+| Cyclic BU Dich.       |     4      |    4     |     4      |    0     |   1.26 (sec)   |                98%                 |
+| Comp. BU              |   987.12   | 1375.41  |  1782.78   |  200.99  |   1.11 (sec)   |                96%                 |
+| Comp. Cyclic BU Dich. |     4      |    4     |     4      |    0     |   0.85 (sec)   |                96%                 |
+
+##### Minimum Edge Length
+
+| Algorithm             | Min. Value | Average | Max. Value | Std Dev. | # Non-Trivials |
+| --------------------- | :--------: | :-----: | :--------: | :------: | :------------: |
+| BU Dich.              |     0      |    0    |     0      |    0     |       0        |
+| Top Down              |     0      |  0.18   |    0.5     |   0.11   |       48       |
+| TD + BU Dich.         |     0      |  0.18   |    0.5     |   0.11   |       48       |
+| Cyclic BU Dich.       |     0      |  0.12   |    0.31    |   0.08   |       44       |
+| Comp. BU              |    0.1     |   0.1   |    0.1     |    0     |       50       |
+| Comp. Cyclic BU Dich. |    0.94    |  0.94   |    0.94    |    0     |       50       |
 
 ## Application Version Log
 
