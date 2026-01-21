@@ -211,6 +211,16 @@ class CyclicGuarantee(circle.InfCircle):
     ###########################################################
     def make_sound(self):
         self.radius = self.pivot.lb.copy()
+    
+    ###########################################################
+    # CyclicGuarantee.make_sound()
+    # --------------------------------------------------------
+    # It always hold that [x* - (pivot.lb)1, x* + (pivot.lb)1]
+    # is ALWAYS sound. Thus, we assign,
+    #   r = pivot.lb
+    ###########################################################
+    def make_complete(self):
+        self.radius = self.pivot.ub.copy()
 
     ###########################################################
     # CyclicGuarantee.get_interval()
