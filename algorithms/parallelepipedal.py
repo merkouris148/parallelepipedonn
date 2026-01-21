@@ -26,9 +26,10 @@ class ParallelepipedalSearch(SearchAlgorithm):
             self,
             isSAT:      NNVerification,
             max_it:     int = 1000,
+            timeout:    int = 60,
             verbose:    bool = False
         ):
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
     
     def search(
             self,
@@ -56,14 +57,16 @@ class TopDownSearch(ParallelepipedalSearch):
     def __init__(
                     self,
                     isSAT,
-                    max_it = 1000,   # max number of iterations
+                    max_it  = 1000,   # max number of iterations
+                    timeout = 60,
                     verbose = False
                 ):
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Top-Down " + self.msg_prefix
+        self.prop_name  = "Soundness"
     
 
     def search(
@@ -74,7 +77,7 @@ class TopDownSearch(ParallelepipedalSearch):
             ]
         ) -> parallel.ParallelepipedalGuarantee:
         # time
-        tic = time.time()
+        self.timer_start()
 
         # main loop
         # num_it counts the number of oracle calls
@@ -90,9 +93,12 @@ class TopDownSearch(ParallelepipedalSearch):
             ## Reporting
             self.progress_message()
 
+            ## Check Timeout
+            if self.check_timeout(): break
+
+
         # time
-        toc = time.time()
-        self.total_time = toc - tic
+        self.timer_stop()
 
         ## Warning
         self.end_report()
@@ -121,28 +127,16 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
                     self,
                     isSAT,
                     max_it = 1000,   # max number of iterations
+                    timeout = 60,
                     verbose = False
                 ):
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Complete Bottom-Up " + self.msg_prefix
+        self.prop_name  = "Completeness"
 
-    ###########
-    # Reports #
-    ###########
-    def end_report(self):
-        if self.verbose:
-            print("\n#",self.msg_prefix, "End Report")
-            print(f"{'Completeness:':<20}"          + str(self.completeness))
-            print(f"{'Refinement Success:':<20}"    + str(self.refinement_success))
-            print(f"{'No. of Iterations:':<20}"     + str(self.num_it))
-            print(f"{'Total Time:':<20}"            + str(round(self.total_time, 2)) + " (secs)")
-            print(f"{'Verif. Time:':<20}"           + str(round(self.isSAT.get_total_time(), 2)) + " (secs)")
-            print(f"{'Verif. Num. Calls:':<20}"     + str(self.isSAT.get_num_calls()))
-            print(f"{'Verif. Avg Time:':<20}"       + str(round(self.isSAT.get_avg_time(), 2)) + " (secs)")
-            print(f"{'Verif. Time Perc.:':<20}"     + str(round(self.isSAT.get_total_time() / self.total_time, 4) * 100) + "%")
 
     def search(
             self,
@@ -152,7 +146,7 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
             ]
         ) -> parallel.ParallelepipedalGuarantee:
         # time
-        tic = time.time()
+        self.timer_start()
 
         # main loop
         # num_it counts the number of oracle calls
@@ -168,9 +162,12 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
             ## Reporting
             self.progress_message()
 
+            ## Check Timeout
+            if self.check_timeout(): break
+
+
         # time
-        toc = time.time()
-        self.total_time = toc - tic
+        self.timer_stop()
 
         ## Warning
         self.end_report()
@@ -205,13 +202,15 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
                     self,
                     isSAT,
                     max_it = 100,   # max number of iterations
+                    timeout = 60,
                     verbose = False
                 ):
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Bottom-Up Lin. DFS"
+        self.prop_name  = "Soundness"
     
 
     def search(
@@ -222,7 +221,7 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
             ]
         ) -> parallel.ParallelepipedalGuarantee:
         # time
-        tic = time.time()
+        self.timer_start()
 
         # main loop
         # expand *upper bound* with linear search
@@ -250,39 +249,48 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
                         self.soundness = True
                         guarantee.revert_expand_ub(i, j)
                         break
+                    
+                    # time
+                    if self.check_timeout(): break
+                if self.is_timeout: break
+            if self.is_timeout: break
 
 
         # expand *lower bound* with linear search
-        for i in range(guarantee.row_dim):
-            for j in range(guarantee.column_dim):
-                for it in range(self.max_it):
-                    ## Keep the old explanation, in case expansion does not work
-                    #old_explanation = copy(explanation)
+        if not self.is_timeout:
+            for i in range(guarantee.row_dim):
+                for j in range(guarantee.column_dim):
+                    for it in range(self.max_it):
+                        ## Keep the old explanation, in case expansion does not work
+                        #old_explanation = copy(explanation)
 
-                    ## Refine the explanation
-                    self.refinement_success = guarantee.expand_lb(i, j)
-                    if not self.refinement_success: break
+                        ## Refine the explanation
+                        self.refinement_success = guarantee.expand_lb(i, j)
+                        if not self.refinement_success: break
 
-                    ## Reporting
-                    self.num_it += 1
-                    self.progress_message()
+                        ## Reporting
+                        self.num_it += 1
+                        self.progress_message()
 
-                    ## Check convergance
-                    self.soundness, _ = self.isSAT(guarantee.get_interval())
-                    if not self.soundness:
-                        # Since we start with the trivial explanation and expand
-                        # the explanation will always be sound, until a counter
-                        # example is provided. If that hapens, we revert to the
-                        # previous sound explanation.
-                        self.soundness = True
-                        guarantee.revert_expand_lb(i, j)
-                        #explanation = old_explanation
-                        break
-
+                        ## Check convergance
+                        self.soundness, _ = self.isSAT(guarantee.get_interval())
+                        if not self.soundness:
+                            # Since we start with the trivial explanation and expand
+                            # the explanation will always be sound, until a counter
+                            # example is provided. If that hapens, we revert to the
+                            # previous sound explanation.
+                            self.soundness = True
+                            guarantee.revert_expand_lb(i, j)
+                            #explanation = old_explanation
+                            break
+                        
+                        # time
+                        if self.check_timeout(): break
+                    if self.is_timeout: break
+                if self.is_timeout: break
 
         # time
-        toc = time.time()
-        self.total_time = toc - tic
+        self.timer_stop()
 
         ## Warning
         self.end_report()
@@ -311,13 +319,15 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
                     self,
                     isSAT,
                     max_it = 100,   # max number of iterations
+                    timeout = 60,
                     verbose = False
                 ):
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Bottom-Up Dich. DFS"
+        self.prop_name  = "Soundness"
 
     def search(
             self,
@@ -327,7 +337,7 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
             ]
         ) -> parallel.ParallelepipedalGuarantee:
         # time
-        tic = time.time()
+        self.timer_start()
 
         # main loop
         # expand *upper bound* with dichotomic search
@@ -361,50 +371,60 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
                         self.print_debug(" unsuccessful expansion!")
                         succ_pivot_refinement = guarantee.down_high_pivot(i, j)
                         if not succ_pivot_refinement: break
+                    
+                    # time
+                    if self.check_timeout(): break
+                if self.is_timeout: break
+            if self.is_timeout: break
                 
 
 
         # expand *lower bound* with dichotomic search
-        for i in range(guarantee.row_dim):
-            for j in range(guarantee.column_dim):
-                for it in range(self.max_it):
-                    ### if dichotomic search converged, break
-                    if not guarantee.low_dichotomic_invariant(i, j):
-                        self.print_debug(" break due to low dichotomic invariance!")
-                        break
+        if not self.is_timeout:
+            for i in range(guarantee.row_dim):
+                for j in range(guarantee.column_dim):
+                    for it in range(self.max_it):
+                        ### if dichotomic search converged, break
+                        if not guarantee.low_dichotomic_invariant(i, j):
+                            self.print_debug(" break due to low dichotomic invariance!")
+                            break
 
 
-                    ## Refine the explanation
-                    self.refinement_success = guarantee.expand_dichotomic_lb(i, j)
-                    if not self.refinement_success:
-                        self.print_debug(" break due to unsuccessful refinement!")
-                        break
+                        ## Refine the explanation
+                        self.refinement_success = guarantee.expand_dichotomic_lb(i, j)
+                        if not self.refinement_success:
+                            self.print_debug(" break due to unsuccessful refinement!")
+                            break
 
-                    ## Reporting
-                    self.num_it += 1
-                    self.progress_message()
+                        ## Reporting
+                        self.num_it += 1
+                        self.progress_message()
 
-                    ## Check convergance
-                    self.soundness, _ = self.isSAT(guarantee.get_interval())
-                    if self.soundness:
-                        self.print_debug(" successful expansion!")
-                        succ_pivot_refinement = guarantee.down_low_pivot(i, j)
-                        if not succ_pivot_refinement: break
-                    
-                    else:
-                        succ_pivot_refinement = guarantee.up_low_pivot(i, j)
-                        self.print_debug(" unsuccessful expansion!")
-                        if not succ_pivot_refinement: break
+                        ## Check convergance
+                        self.soundness, _ = self.isSAT(guarantee.get_interval())
+                        if self.soundness:
+                            self.print_debug(" successful expansion!")
+                            succ_pivot_refinement = guarantee.down_low_pivot(i, j)
+                            if not succ_pivot_refinement: break
+                        
+                        else:
+                            succ_pivot_refinement = guarantee.up_low_pivot(i, j)
+                            self.print_debug(" unsuccessful expansion!")
+                            if not succ_pivot_refinement: break
+                        
+                        # time
+                        if self.check_timeout(): break
+                    if self.is_timeout: break
+                if self.is_timeout: break
 
         
         ## peculiarity of dichotomic search
         if not self.soundness:
             guarantee.make_sound()
-            self.soundness = True
+            self.soundness = True and not self.is_timeout
         
         # time
-        toc = time.time()
-        self.total_time = toc - tic
+        self.timer_stop()
 
         ## Warning
         self.end_report()
@@ -431,13 +451,15 @@ class BottomUpBFS(ParallelepipedalSearch):
                     self,
                     isSAT,
                     max_it = 100,   # max number of iterations
+                    timeout = 60,
                     verbose = False
                 ):
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Bottom-Up BFS "
+        self.prop_name  = "Soundness"
 
     def search(
             self,
@@ -447,7 +469,7 @@ class BottomUpBFS(ParallelepipedalSearch):
             ]
         ) -> parallel.ParallelepipedalGuarantee:
         # time
-        tic = time.time()
+        self.timer_start()
 
         ## expand upper bound
         # BFS' queue
@@ -479,6 +501,8 @@ class BottomUpBFS(ParallelepipedalSearch):
                 continue
 
             else: Q.append((i, j))
+
+            if self.check_timeout(): break
         
         
 
@@ -488,37 +512,39 @@ class BottomUpBFS(ParallelepipedalSearch):
                 (i, j)  for i in range(guarantee.row_dim)
                         for j in range(guarantee.column_dim)
             ]
-        for it in range(self.max_it):
-            ## check queue
-            if Q == []: break
+        if not self.is_timeout:
+            for it in range(self.max_it):
+                ## check queue
+                if Q == []: break
 
-            (i, j) = Q.pop()
-            self.refinement_success = guarantee.expand_lb(i, j)
-            if not self.refinement_success: continue
+                (i, j) = Q.pop()
+                self.refinement_success = guarantee.expand_lb(i, j)
+                if not self.refinement_success: continue
 
-            ## Reporting
-            self.num_it += 1
-            self.progress_message()
+                ## Reporting
+                self.num_it += 1
+                self.progress_message()
 
-            ## Check convergance
-            self.soundness, _ = self.isSAT(guarantee.get_interval())
-            if not self.soundness:
-                # Since we start with the trivial explanation and expand
-                # the explanation will always be sound, until a counter
-                # example is provided. If that hapens, we revert to the
-                # previous sound explanation.
-                self.soundness = True
-                guarantee.revert_expand_lb(i, j)
-                continue
-            
-            else: Q.append((i, j))
+                ## Check convergance
+                self.soundness, _ = self.isSAT(guarantee.get_interval())
+                if not self.soundness:
+                    # Since we start with the trivial explanation and expand
+                    # the explanation will always be sound, until a counter
+                    # example is provided. If that hapens, we revert to the
+                    # previous sound explanation.
+                    self.soundness = True
+                    guarantee.revert_expand_lb(i, j)
+                    continue
+                
+                else: Q.append((i, j))
+
+                if self.check_timeout(): break
 
 
 
         
         # time
-        toc = time.time()
-        self.total_time = toc - tic
+        self.timer_stop()
 
         ## Warning
         self.end_report()

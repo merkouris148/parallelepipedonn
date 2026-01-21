@@ -19,10 +19,11 @@ class AlgoComposition(SearchAlgorithm):
                     algo2:      SearchAlgorithm,
                     isSAT:      NNVerification,
                     max_it:     int = 100,   # max number of iterations
+                    timeout:    int = 60,
                     verbose:    bool = False
                 ) -> None:
         
-        super().__init__(isSAT, max_it, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose)
 
         ## Reporting
         self.msg_prefix = "Algo. Comp.:" + " " + algo1.msg_prefix + "+" + " " + algo2.msg_prefix
@@ -120,10 +121,11 @@ class ParallelAlgoComposition(AlgoComposition):
             algo2:      ParallelepipedalSearch,
             isSAT:      NNVerification,
             max_it:     int = 100,
+            timeout:    int = 60,
             verbose:    bool = False
         ) -> None:
         
-        super().__init__(algo1, algo2, isSAT, max_it, verbose)
+        super().__init__(algo1, algo2, isSAT, max_it, timeout, verbose)
     
 
     def algo1_prep(
@@ -171,9 +173,10 @@ class CyclicAlgoComposition(AlgoComposition):
             algo2:      CyclicSearch,
             isSAT:      NNVerification,
             max_it:     int = 100,
+            timeout:    int = 60,
             verbose:    bool = False
         ) -> None:
-        super().__init__(algo1, algo2, isSAT, max_it, verbose)
+        super().__init__(algo1, algo2, isSAT, max_it, timeout, verbose)
     
 
     def algo1_prep(
@@ -219,9 +222,10 @@ class CyclicParallelAlgoComposition(AlgoComposition):
             algo2:      ParallelepipedalSearch,
             isSAT:      NNVerification,
             max_it:     int = 100,
+            timeout:    int = 60,
             verbose:    bool = False
         ) -> None:
-        super().__init__(algo1, algo2, isSAT, max_it, verbose)
+        super().__init__(algo1, algo2, isSAT, max_it, timeout, verbose)
     
     
     def algo1_prep(
