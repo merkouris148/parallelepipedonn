@@ -13,6 +13,7 @@ import os.path
 
 ## 3rd Party Libraries
 # TensorFlow
+import pandas as pd
 import tensorflow as tf
 #tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import tf2onnx
@@ -38,8 +39,10 @@ def file_exists(path):
     return os.path.isfile(path)
 
 
-class MNISTNeuralNetwork:
-
+#class MNISTNeuralNetwork:
+class FashionMNISTNeuralNetwork:
+#class HandSignNeuralNetwork:
+# class CIFAR10NeuralNetwork:
     ##################
     # Initialization #
     ##################
@@ -80,7 +83,7 @@ class MNISTNeuralNetwork:
         assert self.blank_instance()
 
         ## Data
-        self._load_MNIST_data()
+        self._load_NN_data()
         self._preprocessing()
 
         ## Create Model Architecture
@@ -135,18 +138,38 @@ class MNISTNeuralNetwork:
     # Data #
     ########
 
-    def _load_MNIST_data(self):
+    def _load_NN_data(self):
         ## Precondition
         assert self.data_loaded == False
 
-        mnist = tf.keras.datasets.mnist
+        
+        #mnist = tf.keras.datasets.mnist
+        fashion_mnist = tf.keras.datasets.fashion_mnist
+        # cifar10 = tf.keras.datasets.cifar10
         (
             self.X_train,
             self.Y_train
         ),(
             self.X_test,
             self.Y_test
-        ) = mnist.load_data()
+        # ) = cifar10.load_data()
+        ) = fashion_mnist.load_data()
+        #) = mnist.load_data()
+
+        ## handsign data
+        # train data
+        # train_path      = '../data/nn/hand_sign/sign_mnist_train.csv'
+        # train_data      = pd.read_csv(train_path)
+        # self.X_train    = np.array(train_data.drop(columns=['label']))
+        # self.X_train    = self.X_train.reshape(len(self.X_train), 28, 28,1)
+        # self.Y_train    = np.array(train_data['label'])
+
+        # # train data
+        # test_path      = '../data/nn/hand_sign/sign_mnist_test.csv'
+        # test_data      = pd.read_csv(test_path)
+        # self.X_test    = np.array(test_data.drop(columns=['label']))
+        # self.X_test    = self.X_test.reshape(len(self.X_test), 28, 28,1)
+        # self.Y_test    = np.array(test_data['label'])
 
 
         ## Postcondition
@@ -185,8 +208,19 @@ class MNISTNeuralNetwork:
                                         
                                         # Fully connected Linear Layers
                                         # ReLU activation functions
+                                        # tf.keras.layers.Dense(
+                                        #     #32,
+                                        #     128,
+                                        #     #kernel_initializer  = 'ones',
+                                        #     #bias_initializer    = 'zeros',
+                                        #     # (default) kernel_initializer='glorot_uniform'
+                                        #     kernel_regularizer  = tf.keras.regularizers.L2(0.01),
+                                        #     bias_regularizer    = tf.keras.regularizers.L2(0.01),
+                                        #     activation          = 'relu'
+                                        # ),
                                         tf.keras.layers.Dense(
                                             32,
+                                            #64,
                                             #kernel_initializer  = 'ones',
                                             #bias_initializer    = 'zeros',
                                             # (default) kernel_initializer='glorot_uniform'
@@ -194,7 +228,16 @@ class MNISTNeuralNetwork:
                                             bias_regularizer    = tf.keras.regularizers.L2(0.01),
                                             activation          = 'relu'
                                         ),
-
+                                        # tf.keras.layers.Dense(
+                                        #     32,
+                                        #     #64,
+                                        #     #kernel_initializer  = 'ones',
+                                        #     #bias_initializer    = 'zeros',
+                                        #     # (default) kernel_initializer='glorot_uniform'
+                                        #     kernel_regularizer  = tf.keras.regularizers.L2(0.01),
+                                        #     bias_regularizer    = tf.keras.regularizers.L2(0.01),
+                                        #     activation          = 'relu'
+                                        # ),
                                         # Fully connected Linear Layers
                                         tf.keras.layers.Dense(10)
                                     ])
@@ -220,7 +263,7 @@ class MNISTNeuralNetwork:
         self.model.fit(
                         self.X_train,
                         self.Y_train,
-                        epochs=6,
+                        epochs  = 40,
                         verbose = 1
                     )
         #self.accuracy = self.evaluate()
