@@ -38,20 +38,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
-import experiments#.experiments as experiments
-
-#data_input_path = "../data/twos/inputs"
-#onnx_path       = "../nn_weights/mnist_description.onnx"
-#num_threads     = 20
-#max_it          = 10
-#method          = application.pfx_cyclic_dichotomic_bottom_up
+import experiments
 
 if __name__=="__main__":
     
     ##############################
     # Handling the CLI Arguments #
     ##############################
-    assert len(sys.argv) == 6
+    assert len(sys.argv) >= 7
 
     # Input Data Directory
     data_input_path = sys.argv[1]
@@ -70,9 +64,19 @@ if __name__=="__main__":
     max_it = int(sys.argv[4])
     assert max_it > 0
 
+    # Timeout
+    timeout = int(sys.argv[5])
+    assert timeout > 0
+
     # Method
-    method = sys.argv[5]
+    method = sys.argv[6]
     assert method in args.args_algo.keys(), str(method)
+
+    # Bounds Directory
+    bounds_dir = ""
+    if len(sys.argv) > 7:
+        bounds_dir = sys.argv[7]
+        assert bounds_dir != ""
 
 
     
@@ -84,7 +88,9 @@ if __name__=="__main__":
         onnx_path,
         num_threads,
         method,
-        max_it
+        max_it,
+        timeout,
+        bounds_dir
     )
 
     exps.do_experiments()

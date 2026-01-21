@@ -12,11 +12,22 @@ sys.path.append("..")
 import cli.application as app
 import cli.methods as methods
 import cli.args as args
+import cli.verifiers as verifs
 
 
 ## constants
 predictions_standard_filename = "/predictions.txt"
 explainer_command = "../bin/parallelepipedonn.py"
+
+####################
+# Helper Functions #
+####################
+
+file_sort_key = lambda filename:\
+    int(filename.split("_")[0])\
+    * 10**len(filename)\
+    + int(filename.split("_")[1].split(".")[0])
+
 
 #########
 # Class #
@@ -31,10 +42,13 @@ class ArgumentVector:
             onnx_path,
             method_pfx,
             max_it,
+            timeout,
             rad,
             delta,
             dom_lb,
-            dom_ub
+            dom_ub,
+            lower_bound,
+            upper_bound
         ):
     
         ## Initialization
@@ -46,48 +60,79 @@ class ArgumentVector:
         # context
         self.method_pfx         = method_pfx
         self.max_it             = max_it
+        self.timeout            = timeout
         self.rad                = rad
         self.delta              = delta
         self.dom_lb             = dom_lb
         self.dom_ub             = dom_ub
-    
+        self.lower_bound        = lower_bound
+        self.upper_bound        = upper_bound
+        
+        # set appropriate verifier
+        self.verif              = ""
+        if self.method_pfx == args.algo_args[methods.complete_bu] or\
+            self.method_pfx == args.algo_args[methods.complete_c_d_bu]:
+            self.verif = args.verif_args[verifs.marabou_complete]
+        else:
+            self.verif = args.verif_args[verifs.marabou_sound]
 
     def get_argv(self):
         ## Temporary FIX, should correct later
-        return  "python"                        + " " +\
-                explainer_command               + " " +\
-                "-x"  + " " + self.x_star_path  + " " +\
-                "-c"  + " " + str(self.c_star)  + " " +\
-                "-nn" + " " + self.onnx_path    + " " +\
-                "-al" + " " + self.method_pfx   + " " +\
-                "-mi" + " " + str(self.max_it)  + " " +\
-                "-r"  + " " + str(self.rad)     + " " +\
-                "-d"  + " " + str(self.delta)   + " " +\
-                "-dl" + " " + str(self.dom_lb)  + " " +\
-                "-du" + " " + str(self.dom_ub)  + " " +\
-                "-q" + " " + "-sr" + " " + "-si" + " " + "ov"
-        # the temporary fix is the "mara-complete" line above
-        # "-v"  + " " + "mara-complete"   + " " +\
+        command_str =  "python"                         + " "
+        command_str +=  explainer_command               + " "
+        command_str +=  args.cli_args[args.required][args.x_star_path] + " " + self.x_star_path    + " "
+        command_str +=  args.cli_args[args.required][args.c_star]      + " " + str(self.c_star)    + " "
+        command_str +=  args.cli_args[args.required][args.onnx_path]   + " " + self.onnx_path      + " "
+        command_str +=  args.cli_args[args.optional][args.method]      + " " + self.method_pfx     + " "
+        command_str +=  args.cli_args[args.optional][args.max_it]      + " " + str(self.max_it)    + " "
+        command_str +=  args.cli_args[args.optional][args.timeout]     + " " + str(self.timeout)   + " "
+        command_str +=  args.cli_args[args.optional][args.rad]         + " " + str(self.rad)       + " "
+        command_str +=  args.cli_args[args.optional][args.delta]       + " " + str(self.delta)     + " "
+        command_str +=  args.cli_args[args.optional][args.dom_lb]      + " " + str(self.dom_lb)    + " "
+        command_str +=  args.cli_args[args.optional][args.dom_ub]      + " " + str(self.dom_ub)    + " "
+        command_str +=  args.cli_args[args.optional][args.verif]       + " " + self.verif          + " "
+
+        # if appropriate, set -lb, -ub arguments
+        if self.lower_bound != "" and self.upper_bound != "":
+            command_str +=  args.cli_args[args.optional][args.lb_path]     + " " + self.lower_bound    + " "
+            command_str +=  args.cli_args[args.optional][args.ub_path]     + " " + self.upper_bound    + " "
+        
+        ## suffix
+        command_str += args.cli_args[args.optional][args.quiet]        + " "
+        command_str += args.cli_args[args.optional][args.simple_res]   + " "
+        command_str += args.cli_args[args.optional][args.save_images]  + " "
+        command_str += args.cli_args[args.optional][args.over_out]     + " "
+
+        return command_str
 
     def get_argv_list(self):
-        return  [
-                    "python",
-                    explainer_command,
-                    "-x",   self.x_star_path,
-                    "-c",   str(self.c_star),
-                    "-nn",  self.onnx_path,
-                    "-al",  self.method_pfx,
-                    "-mi",  str(self.max_it),
-                    "-r",   str(self.rad),
-                    "-d",   str(self.delta),
-                    "-dl",  str(self.dom_lb),
-                    "-du",  str(self.dom_ub),
-                    #"-v",   "mara-complete",    ## Temporary FIX, should correct later
-                    "-si",
-                    "-q",
-                    "-sr",
-                    "-ov"
-        ]
+        ## Temporary FIX, should correct later
+        command_list =  ["python"]
+        command_list += [explainer_command]
+        command_list += [args.cli_args[args.required][args.x_star_path],   self.x_star_path    ]
+        command_list += [args.cli_args[args.required][args.c_star],        str(self.c_star)    ]
+        command_list += [args.cli_args[args.required][args.onnx_path],     self.onnx_path      ]
+        command_list += [args.cli_args[args.optional][args.method],        self.method_pfx     ]
+        command_list += [args.cli_args[args.optional][args.max_it],        str(self.max_it)    ]
+        command_list += [args.cli_args[args.optional][args.timeout],       str(self.timeout)   ]
+        command_list += [args.cli_args[args.optional][args.rad],           str(self.rad)       ]
+        command_list += [args.cli_args[args.optional][args.delta],         str(self.delta)     ]
+        command_list += [args.cli_args[args.optional][args.dom_lb],        str(self.dom_lb)    ]
+        command_list += [args.cli_args[args.optional][args.dom_ub],        str(self.dom_ub)    ]
+        command_list += [args.cli_args[args.optional][args.verif],         self.verif          ]
+
+        # if appropriate, set -lb, -ub arguments
+        if self.lower_bound != "" and self.upper_bound != "":
+            command_list +=  [args.cli_args[args.optional][args.lb_path],  self.lower_bound]
+            command_list +=  [args.cli_args[args.optional][args.ub_path],  self.upper_bound]
+        
+        ## suffix
+        command_list += [args.cli_args[args.optional][args.quiet]       ]
+        command_list += [args.cli_args[args.optional][args.simple_res]  ]
+        command_list += [args.cli_args[args.optional][args.save_images] ]
+        command_list += [args.cli_args[args.optional][args.over_out]    ]
+
+        return command_list
 
 
 
@@ -103,6 +148,7 @@ class ResultsVector:
         self.min_edge_len       = float(tokens[3])
         self.verif_tot_time     = float(tokens[4])
         self.verif_num_calls    = int(tokens[5])
+        self.timeout            = int(tokens[6])
 
 
 
@@ -122,6 +168,8 @@ class Experiments:
         ## Context
         method_pfx  = methods.top_down, # specified algorithm for explanations
         max_it      = 10000,            # max number of iterations
+        timeout     = 60,
+        bounds_dir  = "",
         rad         = 1,                # radius of distance restriction
         delta       = 0.1,              # percision constant
         dom_lb      = 0.0,              # instance domain
@@ -141,6 +189,7 @@ class Experiments:
         # Context
         assert method_pfx in args.args_algo.keys()
         assert max_it > 0
+        assert timeout > 0
         assert delta > 0
         assert rad > delta
 
@@ -155,10 +204,12 @@ class Experiments:
         # context
         self.method_pfx         = method_pfx
         self.max_it             = max_it
+        self.timeout            = timeout
         self.rad                = rad
         self.delta              = delta
         self.dom_lb             = dom_lb
         self.dom_ub             = dom_ub
+        self.bounds_dir         = bounds_dir
 
         # get the file with the predictions
         self.predictions_path   = input_directory + predictions_standard_filename
@@ -190,19 +241,35 @@ class Experiments:
         self.experiments_lock    = threading.Lock()
         i = 0
         in_files = list(os.listdir(self.input_directory))
-        in_files.sort()
+        in_files = list(filter(lambda filename: filename.split(".")[-1] == "csv", in_files))
+        in_files.sort(key=file_sort_key)
+        
         for x_star_path_name in in_files:
-            if x_star_path_name.split(".")[1] != "csv": continue
+            x_star_path_name_pfx = x_star_path_name.split(".")[0]
+            x_star_path_name_sfx = x_star_path_name.split(".")[1]
+            if x_star_path_name_sfx != "csv": continue
+            
+            lowerbound_path = ""
+            upperbound_path = ""
+            if self.bounds_dir != "":            
+                lowerbound_path = self.bounds_dir + "/" + x_star_path_name_pfx + "_lb.csv"
+                upperbound_path = self.bounds_dir + "/" + x_star_path_name_pfx + "_ub.csv"
+                print(lowerbound_path)
+                print(self.bounds_dir)
+
             arg_vec = ArgumentVector(
                             self.input_directory + "/" + x_star_path_name,
                             self.predictions[i],
                             self.onnx_path,
                             self.method_pfx,
                             self.max_it,
+                            self.timeout,
                             self.rad,
                             self.delta,
                             self.dom_lb,
-                            self.dom_ub
+                            self.dom_ub,
+                            lowerbound_path,
+                            upperbound_path
                         )
             self.experiments.append(arg_vec)
             i += 1
@@ -242,6 +309,7 @@ class Experiments:
         self.max_time       = -math.inf
         self.var_time       = 0
         self.tot_time       = 0
+        self.timeouts       = 0
 
         # guarantee's complexity
         self.min_comp       = math.inf
@@ -313,7 +381,11 @@ class Experiments:
             arg_vec = self.experiments.pop()
 
             # some I/O
-            print("Thread:", threading.get_ident(), "queue len.:", len(self.experiments), "x_star path:", arg_vec.x_star_path)
+            print(
+                "Thread:",      threading.get_ident(),
+                "queue len.:",  len(self.experiments),
+                "x_star path:", arg_vec.x_star_path
+            )
 
             # release lock
             self.experiments_lock.release()
@@ -346,7 +418,7 @@ class Experiments:
                 break
 
             parallelepipedonn_call_out = parallelepipedonn_call.stdout
-            print("\n", threading.get_ident(), "subprocess:", parallelepipedonn_call_out, "\n")
+            #print("\n", threading.get_ident(), "subprocess:", parallelepipedonn_call_out, "\n")
             res_vec = ResultsVector(parallelepipedonn_call_out)
             
 
@@ -374,6 +446,7 @@ class Experiments:
             self.tot_time   += res.time
             self.max_time   = max(res.time, self.max_time)
             self.min_time   = min(res.time, self.min_time)
+            self.timeouts   += res.timeout
 
             # explanation's complexity
             self.avg_comp   += res.comp
@@ -449,6 +522,7 @@ class Experiments:
                     f"{'Max.:':<26}"                + str(self.max_time)                + "\n" +\
                     f"{'Var.:':<26}"                + str(self.var_time)                + "\n" +\
                     f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_time))     + "\n" +\
+                    f"{'Timeouts:':<26}"            + str(self.timeouts)                + "\n" +\
                     "-" * 60                                                            + "\n" +\
                     "# Guarantee's Description Complexity:"                             + "\n" +\
                     f"{'Min.:':<26}"                + str(self.min_comp)                + "\n" +\
@@ -477,6 +551,7 @@ class Experiments:
                     f"{'Max.:':<26}"                + str(self.max_verif_calls)         + "\n" +\
                     f"{'Var.:':<26}"                + str(self.var_verif_calls)         + "\n" +\
                     f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_verif_calls)) + "\n" +\
+                    "-" * 60                                                            + "\n" +\
                     "# Verification Overall Statistics"                                 + "\n" +\
                     f"{'Avg. Verif. Time/Call:':<26}"      + str(self.verif_time_call)  + "\n" +\
                     f"{'Percent. Verif_t/Tot_t:':<26}"     + str(self.verif_percent)
