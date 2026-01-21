@@ -1,0 +1,54 @@
+### Experimental Reults ###
+Date-Time:                2026-01-19 16:46:11.255459
+# Parameters:
+Method:                   complete-c-d-bu
+Max. It.:                 10
+Radius Dist. Restr.:      1
+Delta:                    0.1
+------------------------------------------------------------
+# Iterations:
+Min.:                     4
+Avg.:                     4.0
+Max.:                     4
+Var.:                     0.0
+Std Dev.:                 0.0
+------------------------------------------------------------
+# Time:
+Min.:                     2.42
+Avg.:                     3.5198
+Max.:                     4.47
+Var.:                     0.39925396
+Std Dev.:                 0.631865460363201
+Timeouts:                 0
+------------------------------------------------------------
+# Guarantee's Description Complexity:
+Min.:                     915
+Avg.:                     1185.0
+Max.:                     1381
+Var.:                     14364.4
+Std Dev.:                 119.85157487492603
+------------------------------------------------------------
+# Guarantee's Minimum Edge Length:
+Min.:                     0.9375
+Avg.:                     0.9375
+Max.:                     0.9375
+Var.:                     0.0
+Std Dev.:                 0.0
+------------------------------------------------------------
+# Verification Oracle's Time:
+Min.:                     2.3
+Avg.:                     3.3962000000000017
+Max.:                     4.33
+Var.:                     0.39093955999999996
+Std Dev.:                 0.6252515973590151
+------------------------------------------------------------
+# Verification Oracle Num. of Calls:
+Min.:                     4
+Avg.:                     4.0
+Max.:                     4
+Var.:                     0.0
+Std Dev.:                 0.0
+------------------------------------------------------------
+# Verification Overall Statistics
+Avg. Verif. Time/Call:    0.8490500000000004
+Percent. Verif_t/Tot_t:   0.9648843684300249
