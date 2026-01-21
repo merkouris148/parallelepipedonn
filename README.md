@@ -94,6 +94,8 @@ For our experiments we randomly choose 50 MNIST images from MNIST's Test Set, 5 
 
 #### Hardware
 
+The system specifications bellow are recommended for *parallel* execution of multiple inputs. For testing a single input, a simple CPU with ~1GB of RAM would suffice.
+
 | Parameters Desc. | Values |
 | - | - |
 | **OS**            | Ubuntu 18.04              |
@@ -170,6 +172,15 @@ The Neural Networks we used is discribed bellow.
 | Comp. BU | 0.9 | 0.99 | 1.0 | 0.02 | 11 |
 | Comp. Cyclic BU Dich. | 0.94 | 0.94 | 0.94 | 0 | 49 |
 
+##### Examples
+
+Original Image: ![7_4](./examples/MNIST/7-4.png)
+
+| Algorithms |                         BU Dich.                         |                   Top Down                   |                        TD + BU Dich.                         |                   Cyclic BU Dich.                    |                           Comp. BU                           |                     Comp. Cyc. BU Dich.                      |
+| ---------- | :------------------------------------------------------: | :------------------------------------------: | :----------------------------------------------------------: | :--------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **LB**     | ![bu-d-dfs-7-4_lb](./examples/MNIST/bu-d-dfs-7-4_lb.png) | ![td-7-4_lb](./examples/MNIST/td-7-4_lb.png) | ![td+bu-d-dfs-7-4_lb](./examples/MNIST/td+bu-d-dfs-7-4_lb.png) | ![c-d-bu-7-4_lb](./examples/MNIST/c-d-bu-7-4_lb.png) | ![complete-bu-7-4_lb](./examples/MNIST/complete-bu-7-4_lb.png) | ![complete-c-d-bu-7-4_lb](./examples/MNIST/complete-c-d-bu-7-4_lb.png) |
+| **UB**     | ![bu-d-dfs-7-4_ub](./examples/MNIST/bu-d-dfs-7-4_ub.png) | ![td-7-4_ub](./examples/MNIST/td-7-4_ub.png) | ![td+bu-d-dfs-7-4_ub](./examples/MNIST/td+bu-d-dfs-7-4_ub.png) | ![c-d-bu-7-4_ub](./examples/MNIST/c-d-bu-7-4_ub.png) | ![complete-bu-7-4_ub](./examples/MNIST/complete-bu-7-4_ub.png) | ![complete-c-d-bu-7-4_ub](./examples/MNIST/complete-c-d-bu-7-4_ub.png) |
+
 #### Fashion MNIST
 
 ##### CPU Time
@@ -205,11 +216,20 @@ The Neural Networks we used is discribed bellow.
 | Comp. BU              |    0.1     |   0.1   |    0.1     |    0     |       50       |
 | Comp. Cyclic BU Dich. |    0.94    |  0.94   |    0.94    |    0     |       50       |
 
+##### Examples
+
+Original Image: ![7_4](./examples/FashionMNIST/7_4.png)
+
+| Algorithms |                           BU Dich.                           |                      Top Down                       |                        TD + BU Dich.                         |                       Cyclic BU Dich.                       |                           Comp. BU                           |                     Comp. Cyc. BU Dich.                      |
+| ---------- | :----------------------------------------------------------: | :-------------------------------------------------: | :----------------------------------------------------------: | :---------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+| **LB**     | ![bu-d-dfs-7-4_lb](./examples/FashionMNIST/bu-d-dfs-7_4_lb.png) | ![td-7-4_lb](./examples/FashionMNIST/td-7_4_lb.png) | ![td+bu-d-dfs-7-4_lb](./examples/FashionMNIST/td+bu-d-dfs-7_4_lb.png) | ![c-d-bu-7-4_lb](./examples/FashionMNIST/c-bu-d-7_4_lb.png) | ![complete-bu-7-4_lb](./examples/FashionMNIST/complete-bu-7_4_lb.png) | ![complete-c-d-bu-7-4_lb](./examples/FashionMNIST/complete-c-bu-d-7_4_lb.png) |
+| **UB**     | ![bu-d-dfs-7-4_ub](./examples/FashionMNIST/bu-d-dfs-7_4_ub.png) | ![td-7-4_ub](./examples/FashionMNIST/td-7_4_ub.png) | ![td+bu-d-dfs-7-4_ub](./examples/FashionMNIST/td+bu-d-dfs-7_4_ub.png) | ![c-d-bu-7-4_ub](./examples/FashionMNIST/c-bu-d-7_4_ub.png) | ![complete-bu-7-4_ub](./examples/FashionMNIST/complete-bu-7_4_ub.png) | ![complete-c-d-bu-7-4_ub](./examples/FashionMNIST/complete-c-bu-d-7_4_ub.png) |
+
 ## Application Version Log
 
 ### Version Convention
 
-The version numbering follow the convension `X.Y.Z.W`:
+The version numbering follow the convention `X.Y.Z.W`:
 
 * `X`: Major Theoretical Change. This change should engulf a major expansion to the underlying *mathematical theory*. 
 * `Y`: Minor Theoretical Change. This change *expand the existing underlying mathematical theory*. For instance adding more algorithms that share the same underlying structure with the existing ones.
