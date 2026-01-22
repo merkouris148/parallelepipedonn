@@ -29,16 +29,11 @@ from pprint import pprint
 ############
 # Constant #
 ############
-# nn_name         = "CIFAR10"
-nn_name         = "HandSign"
+# nn_name         = "FashionMNIST"  # (uncommend for Fashion MNIST)
 nn_name         = "MNIST"
 # path to the weights
-# weights_path_h5 = "../nn_weights/cifar10_nn-128-64-32.h5"
-# onnx_path       = "../nn_weights/cifar10_nn-128-64-32.onnx"
-# weights_path_h5 = "../nn_weights/hand_sign_nn-128-64-32.h5"
-# onnx_path       = "../nn_weights/hand_sign_nn-128-64-32.onnx"
-# weights_path_h5 = "../nn_weights/fashion_mnist_nn-64.h5"
-# onnx_path       = "../nn_weights/fashion_mnist_nn-64.onnx"
+# weights_path_h5 = "../nn_weights/fashion_mnist_nn-32.h5"      # (uncommend for Fashion MNIST)
+# onnx_path       = "../nn_weights/fashion_mnist_nn-32.onnx"    # (uncommend for Fashion MNIST)
 weights_path_h5 = "../nn_weights/mnist_nn-32.h5"
 onnx_path       = "../nn_weights/mnist_nn-32.onnx"
 # number of test samples, to re-evaluate accuracy
@@ -52,10 +47,8 @@ if __name__ == "__main__":
     ###########################
     print("#### Testing", nn_name, "Neural Network ####\n")
 
-    neural_net = nn.FashionMNISTNeuralNetwork(weights_path_h5)
-    # neural_net = nn.HandSignNeuralNetwork(weights_path_h5)
-    # neural_net = nn.MNISTNeuralNetwork(weights_path_h5)
-    # neural_net = nn.CIFAR10NeuralNetwork(weights_path_h5)
+    #neural_net = nn.FashionMNISTNeuralNetwork(weights_path_h5)     # (uncommend for Fashion MNIST)
+    neural_net = nn.MNISTNeuralNetwork(weights_path_h5)
     neural_net.initialization()
     neural_net.export2onnx(onnx_path)
 
@@ -64,7 +57,7 @@ if __name__ == "__main__":
     ## get dimentions
     row_dim     = neural_net.X_test[0][:].shape[0]
     column_dim  = neural_net.X_test[0][:].shape[1]
-    num_classes = 26
+    num_classes = 10
 
     print("Input Dimension")
     print("\tRow Dimension: ", row_dim)
