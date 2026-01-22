@@ -7,8 +7,9 @@
 | **Author:**    | Merkouris Papamichail                                        |
 | **email:**     | mercoyris@ics.forth.gr                                       |
 | **Institute:** | Institute of Computer Science, Foundation for Research and Technology -- Hellas,<br/>Computer Science Department, University of Crete |
-| **Version:**   | 2.2.0.5 |
-| **Last Edit:** | 14/1/2026 |
+| **Version:**   | 2.2.0.5                                                      |
+| **Last Edit:** | 14/1/2026                                                    |
+| **LICENSE**    | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License |
 
 ----
 
@@ -43,15 +44,21 @@ The `parallelepipedonn.py` script is located at the `./bin` directory.
 
 * Some example instances:
 
-  `python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al bu-d-dfs`
-
-  `python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al td`
+  ```bash
+  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al bu-d-dfs
+  ```
+  
+  ```bash
+  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al td
+  ```
 
 ### Recreate our Experiments
 
 To recreate our experiments use the `experiments_script.py` located at the `./experiments` directory. Use the command:
 
-`python experiments_script.py "../data/inputs/MNIST" "./nn_weights/mnist_nn-32.onnx" 35 10000 60 td`
+```bash
+python experiments_script.py "../data/inputs/MNIST" "./nn_weights/mnist_nn-32.onnx" 35 10000 60 td
+```
 
 To run the Top Down algorithm on the MNIST neural network, using 35 threads, 10,000 max. iterations, and 60 min. timeout. Alternatively, you can use the `all_algos_single_dataset.sh` to apply all the recommended algorithms on a single dataset.
 
@@ -59,7 +66,9 @@ To run the Top Down algorithm on the MNIST neural network, using 35 threads, 10,
 
 In order to generate the datasets, `cd` to the `./experiments` directory and use the following command:
 
-`python gen_mnist_single_class.py`
+```bash
+python gen_mnist_single_class.py
+```
 
 As is the script will generate `5` instances of the `7` class. Change the variable `class_identifier` to generate instances of a different class. Change the variable `num_samples` to generate a different number of instances.
 
