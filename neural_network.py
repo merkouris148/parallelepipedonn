@@ -39,10 +39,8 @@ def file_exists(path):
     return os.path.isfile(path)
 
 
-#class MNISTNeuralNetwork:
-class FashionMNISTNeuralNetwork:
-#class HandSignNeuralNetwork:
-# class CIFAR10NeuralNetwork:
+class MNISTNeuralNetwork:
+#class FashionMNISTNeuralNetwork:   # (uncommend for MNIST)
     ##################
     # Initialization #
     ##################
@@ -143,33 +141,17 @@ class FashionMNISTNeuralNetwork:
         assert self.data_loaded == False
 
         
-        #mnist = tf.keras.datasets.mnist
-        fashion_mnist = tf.keras.datasets.fashion_mnist
-        # cifar10 = tf.keras.datasets.cifar10
+        mnist = tf.keras.datasets.mnist
+        #fashion_mnist = tf.keras.datasets.fashion_mnist # (uncommend for fashion MNIST)
         (
             self.X_train,
             self.Y_train
         ),(
             self.X_test,
             self.Y_test
-        # ) = cifar10.load_data()
-        ) = fashion_mnist.load_data()
-        #) = mnist.load_data()
+        #) = fashion_mnist.load_data()  # (uncommend for fashion MNIST)
+        ) = mnist.load_data()
 
-        ## handsign data
-        # train data
-        # train_path      = '../data/nn/hand_sign/sign_mnist_train.csv'
-        # train_data      = pd.read_csv(train_path)
-        # self.X_train    = np.array(train_data.drop(columns=['label']))
-        # self.X_train    = self.X_train.reshape(len(self.X_train), 28, 28,1)
-        # self.Y_train    = np.array(train_data['label'])
-
-        # # train data
-        # test_path      = '../data/nn/hand_sign/sign_mnist_test.csv'
-        # test_data      = pd.read_csv(test_path)
-        # self.X_test    = np.array(test_data.drop(columns=['label']))
-        # self.X_test    = self.X_test.reshape(len(self.X_test), 28, 28,1)
-        # self.Y_test    = np.array(test_data['label'])
 
 
         ## Postcondition
