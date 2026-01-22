@@ -11,10 +11,10 @@ onnx_path="../nn_weights/hand_sign_nn-128-64-32.onnx"
 num_threads=35
 
 ## Inputs
-input="../data/inputs/HandSign"
+input="../data/inputs/MNIST"
 
 ## Outputs
-output="../data/outputs/HandSign"
+output="../data/outputs/MNIST"
 
 ## Timeout
 timeout=60

@@ -17,16 +17,17 @@ from neural_network import HandSignNeuralNetwork
 
 ## Constants
 # weights path
-weights_path = "../nn_weights/hand_sign_nn-128-64-32.h5"
+weights_path = "../nn_weights/mnist_nn-32.h5"
 
 # Parameters
-class_identifier    = 26
-num_samples         = 5
+class_identifier    = 7     # change here to generate instances of a different class
+num_samples         = 5     # change here to generate a different number of instances
 shuffle             = True
 # files
 path_header         = "../data"
 data_set_name       = "/inputs"
-outputs_dir         = "/HandSign/"
+outputs_dir         = "/MNIST/"
+# outputs_dir         = "/FashionMNIST/" # (uncommend to generate FashionMNIST instances)
 
 preds_filename      = "predictions.txt"
 
@@ -38,7 +39,8 @@ img_sample_sfx      = ".png"
 
 
 if __name__=="__main__":
-    neural_net = HandSignNeuralNetwork(weights_path)
+    neural_net = MNISTNeuralNetwork(weights_path)
+    # neural_net = FashionMNISTNeuralNetwork(weights_path) # (uncommend to generate FashionMNIST instances)
     neural_net.initialization()
 
     ## indices
