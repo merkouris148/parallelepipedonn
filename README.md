@@ -1,4 +1,4 @@
- ![logo](./logo-white-bg.png)
+ ![logo](./figures/illustrations/logo-white-bg.png)
 
 *Computing Maximally Sound & Minimally Complete Interval Certifications for Multilayered Perceptrons*
 
@@ -15,7 +15,7 @@
 
 ## Description
 
-![demo](./demo-black-white-bg.png)
+![demo](./figures/illustrations/demo-black-white-bg.png)
 
 Multilayered Perceptron (MLP) Classifiers partition the input space to *compact* decision surfaces $\mathcal{D}_c$. Even for simple MLPs these decision surfaces can be quite complex. **ParallelepipedoNN** computes *maximally sound interval*, or *minimally complete* approximations to these decision surfaces, given an input point $\mathbf{x}^\star$, that get classified in the class $c$, by a MLP classifier $\kappa(\cdot)$, i.e. $\kappa(\mathbf{x}^\star) = c$. In the $\mathbb{R}^d$ space an interval $I$ is represented by two vectors $\mathbf{lb}, \mathbf{ub}$, s.t. $\mathbf{lb} \leq \mathbf{ub}$. Here we generalize $\leq$ to denote the *coordinate-wise* less than or equal comparison. An interval $I = [\mathbf{lb}, \mathbf{ub}]$ is *sound* if $I \subseteq \mathcal{D}_c$. An interval $I$ is *maximally sound*, if it is sound, and for every $I^\prime$, s.t. $I^\prime \subseteq \mathcal{D}_c$, then $I^\prime \subseteq I$.
 
@@ -226,6 +226,10 @@ Original Image: ![7_4](./examples/MNIST/7-4.png)
 | **LB**     | ![bu-d-dfs-7-4_lb](./examples/MNIST/bu-d-dfs-7-4_lb.png) | ![td-7-4_lb](./examples/MNIST/td-7-4_lb.png) | ![td+bu-d-dfs-7-4_lb](./examples/MNIST/td+bu-d-dfs-7-4_lb.png) | ![c-d-bu-7-4_lb](./examples/MNIST/c-d-bu-7-4_lb.png) | ![complete-bu-7-4_lb](./examples/MNIST/complete-bu-7-4_lb.png) | ![complete-c-d-bu-7-4_lb](./examples/MNIST/complete-c-d-bu-7-4_lb.png) |
 | **UB**     | ![bu-d-dfs-7-4_ub](./examples/MNIST/bu-d-dfs-7-4_ub.png) | ![td-7-4_ub](./examples/MNIST/td-7-4_ub.png) | ![td+bu-d-dfs-7-4_ub](./examples/MNIST/td+bu-d-dfs-7-4_ub.png) | ![c-d-bu-7-4_ub](./examples/MNIST/c-d-bu-7-4_ub.png) | ![complete-bu-7-4_ub](./examples/MNIST/complete-bu-7-4_ub.png) | ![complete-c-d-bu-7-4_ub](./examples/MNIST/complete-c-d-bu-7-4_ub.png) |
 
+##### Mininmum Edge Length Distribution
+
+![MNIST-min-edge-len](./figures/analysis/MNIST-min-edge-len.png)
+
 #### Fashion MNIST
 
 ##### CPU Time
@@ -269,6 +273,10 @@ Original Image: ![7_4](./examples/FashionMNIST/7_4.png)
 | ---------- | :----------------------------------------------------------: | :-------------------------------------------------: | :----------------------------------------------------------: | :---------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
 | **LB**     | ![bu-d-dfs-7-4_lb](./examples/FashionMNIST/bu-d-dfs-7_4_lb.png) | ![td-7-4_lb](./examples/FashionMNIST/td-7_4_lb.png) | ![td+bu-d-dfs-7-4_lb](./examples/FashionMNIST/td+bu-d-dfs-7_4_lb.png) | ![c-d-bu-7-4_lb](./examples/FashionMNIST/c-bu-d-7_4_lb.png) | ![complete-bu-7-4_lb](./examples/FashionMNIST/complete-bu-7_4_lb.png) | ![complete-c-d-bu-7-4_lb](./examples/FashionMNIST/complete-c-bu-d-7_4_lb.png) |
 | **UB**     | ![bu-d-dfs-7-4_ub](./examples/FashionMNIST/bu-d-dfs-7_4_ub.png) | ![td-7-4_ub](./examples/FashionMNIST/td-7_4_ub.png) | ![td+bu-d-dfs-7-4_ub](./examples/FashionMNIST/td+bu-d-dfs-7_4_ub.png) | ![c-d-bu-7-4_ub](./examples/FashionMNIST/c-bu-d-7_4_ub.png) | ![complete-bu-7-4_ub](./examples/FashionMNIST/complete-bu-7_4_ub.png) | ![complete-c-d-bu-7-4_ub](./examples/FashionMNIST/complete-c-bu-d-7_4_ub.png) |
+
+##### Mininmum Edge Length Distribution
+
+![Fashion-MNIST-min-edge-len](./figures/analysis/Fashion-MNIST-min-edge-len.png)
 
 ## Application Version Log
 
