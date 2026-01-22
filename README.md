@@ -20,6 +20,8 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 ## Installation
 
+Simply download and install the requirements, then download the current code from this repository. Additional information on how to install the Marabou verifier can be found [here](https://github.com/NeuralNetworkVerification/Marabou). Note that installing the 3rd party Gurobi optimizer is *optional*, and not required to recreate our experiments.
+
 ### Dependencies
 
 | Library | Version |
@@ -32,6 +34,40 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 | TensorFlow | 2.12.0 |
 
 ## Usage
+
+### Run a Single Instance
+
+The `parallelepipedonn.py` script is located at the `./bin` directory.
+
+* For testing if the application is installed properly, you can run the help listing: `python parallelepipedonn.py -h`
+
+* Some example instances:
+
+  `python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al bu-d-dfs`
+
+  `python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al td`
+
+### Recreate our Experiments
+
+To recreate our experiments use the `experiments_script.py` located at the `./experiments` directory. Use the command:
+
+`python experiments_script.py "../data/inputs/MNIST" "./nn_weights/mnist_nn-32.onnx" 35 10000 60 td`
+
+To run the Top Down algorithm on the MNIST neural network, using 35 threads, 10,000 max. iterations, and 60 min. timeout. Alternatively, you can use the `all_algos_single_dataset.sh` to apply all the recommended algorithms on a single dataset.
+
+### (Optional) Generate the Datasets
+
+In order to generate the datasets, `cd` to the `./experiments` directory and use the following command:
+
+`python gen_mnist_single_class.py`
+
+As is the script will generate `5` instances of the `7` class. Change the variable `class_identifier` to generate instances of a different class. Change the variable `num_samples` to generate a different number of instances.
+
+### (Optional) Retrain the Neural Networks
+
+In order to retrain the MNIST dataset, first you need to erase (or rename) the files from the `./nn_weights` directory (without erasing the directory). Then you need to run the `test_nn.py` script, located at the `./tests` directory. For Fashion MNIST, the `test_nn.py` and the `./neural_network.py` scripts need to be modified, by un-commending some lines, and re-running `test_nn.py`.
+
+### CLI Arguments
 
 | Argument | Description | Example | Domain | Req. | Default |
 | -------- | ----------- | ------- | ------ | ------- | -------- |
@@ -84,7 +120,7 @@ Bellow we list the supported algorithms. We mark as *tested* the algorithms that
 | `complete-bu` | Complete Bottom-Up | **C** | ✔ |
 | `complete-c-d-bu` | Complete Cyclic Dichotomic Bottom Up | **C** | ✔ |
 
-*For the complete algorithms the argument `-v mara-complete` must be used.*
+**IMPORTANT:** *For the complete algorithms the argument `-v mara-complete` must be used.* Otherwise, the results will be wrong.
 
 ## Experiments
 
@@ -121,7 +157,7 @@ Dichotomic algorithms are *less* sensitive to the $\delta$ value.
 
 #### Neural Networks
 
-The Neural Networks we used is discribed bellow.
+The Neural Networks we used is described bellow. For both datasets, we use the same architecture.
 
 | Parameters Desc. | Values |
 | - | - |
