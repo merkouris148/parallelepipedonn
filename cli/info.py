@@ -3,7 +3,7 @@ class app:
     version     = "2.2.0.5"
     author      = "Merkouris Papamichail"
     institute_1 = "Institute of Computer Science, FORTH"
-    institute_2 = "Computer Science Department, UoC"
+    institute_2 = "Computer Science Department, ---"
     year        = "2026"
     license     = "CC-BY-NC-SA 4.0"
 
