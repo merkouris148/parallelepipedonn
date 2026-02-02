@@ -23,7 +23,7 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 ### Installation via Conda (Recommended)
 
-Clone the github repository, using `git clone <repo-url>`. Then `cd` to the parallelepipedonn directory. Finally, create a dedicated [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html) environment using the following command:
+Clone the github repository, using `git clone <repo-url>`. Then `cd` to the `./parallelepipedonn` directory. Finally, create a dedicated [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html) environment using the following command:
 
 ```bash
 conda env create -n pnn-env -f environment.yml
