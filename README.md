@@ -21,18 +21,30 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 ## Installation
 
+### Installation via Conda (Recommended)
+
+Create a dedicated conda environment using the following command:
+```
+conda env create -n pnn-env -f environment.yml
+```
+
+### Manual Installation
+
 Simply download and install the requirements, then download the current code from this repository. Additional information on how to install the Marabou verifier can be found [here](https://github.com/NeuralNetworkVerification/Marabou). Note that installing the 3rd party Gurobi optimizer is *optional*, and not required to recreate our experiments.
 
 ### Dependencies
 
-| Library | Version |
-| - | - |
-| Python | 3.8 |
-| Marabou | 2.0 |
-| ONNX | 1.16.0 |
-| NumPy | 1.23.5 |
-| Matplotlib | 3.7.2 |
-| TensorFlow | 2.12.0 |
+| Library | Version | Command |
+| - | - | - |
+| Python | 3.8 | `conda create -n pnn-env python=3.8` |
+| | | `conda activate pnn-env` |
+| NumPy | 1.23.5 | `conda install numpy` |
+| Matplotlib | 3.7.2 | `conda install matplotlib` |
+| TensorFlow | 2.12.0 | `conda install tensorflow` |
+| ONNX | 1.16.0 | `conda install onnx` |
+| Marabou | 2.0 | `pip install maraboupy` |
+| ONNX runtime | 1.19.2 | `pip install onnxruntime` |
+| TF2ONNX | 1.16.1 | `pip install tf2onnx` |
 
 ## Usage
 
