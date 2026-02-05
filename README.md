@@ -58,11 +58,11 @@ The `parallelepipedonn.py` script is located at the `./bin` directory.
 * Some example instances:
 
   ```bash
-  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al bu-d-dfs
+  python parallelepipedonn.py -x ../data/inputs/MNIST/7-1.csv -c 7 -nn ../nn_weights/mnist_nn-32.onnx -al bu-d-dfs
   ```
   
   ```bash
-  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al td
+  python parallelepipedonn.py -x ../data/inputs/MNIST/7-1.csv -c 7 -nn ../nn_weights/mnist_nn-32.onnx -al td
   ```
 
 ### Recreate our Experiments
@@ -70,7 +70,7 @@ The `parallelepipedonn.py` script is located at the `./bin` directory.
 To recreate our experiments use the `experiments_script.py` located at the `./experiments` directory. Use the command:
 
 ```bash
-python experiments_script.py "../data/inputs/MNIST" "./nn_weights/mnist_nn-32.onnx" 35 10000 60 td
+python experiments_script.py "../data/inputs/MNIST" "../nn_weights/mnist_nn-32.onnx" 35 10000 60 td
 ```
 
 To run the Top Down algorithm on the MNIST neural network, using 35 threads, 10,000 max. iterations, and 60 min. timeout. Alternatively, you can use the `all_algos_single_dataset.sh` to apply all the recommended algorithms on a single dataset.
