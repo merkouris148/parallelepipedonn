@@ -7,8 +7,8 @@
 | **Author:**    | Merkouris Papamichail                                        |
 | **email:**     | mercoyris@ics.forth.gr                                       |
 | **Institute:** | Institute of Computer Science, Foundation for Research and Technology -- Hellas,<br/>Computer Science Department, University of Crete |
-| **Version:**   | 2.2.0.5                                                      |
-| **Last Edit:** | 14/1/2026                                                    |
+| **Version:**   | 2.2.1.60                                                     |
+| **Last Edit:** | 13/6/2026                                                    |
 | **LICENSE**    | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License |
 
 ----
@@ -23,7 +23,7 @@ Multilayered Perceptron (MLP) Classifiers partition the input space to *compact*
 
 ### Installation via Conda (Recommended)
 
-Clone the github repository, using `git clone <repo-url>`. Then `cd` to the `./parallelepipedonn` directory. Finally, create a dedicated [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html) environment using the following command:
+Clone the github repository, using `git clone <repo-url>`. Then `cd` to the parallelepipedonn directory. Finally, create a dedicated [conda](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html) environment using the following command:
 
 ```bash
 conda env create -n pnn-env -f environment.yml
@@ -58,11 +58,11 @@ The `parallelepipedonn.py` script is located at the `./bin` directory.
 * Some example instances:
 
   ```bash
-  python parallelepipedonn.py -x ../data/inputs/MNIST/7-1.csv -c 7 -nn ../nn_weights/mnist_nn-32.onnx -al bu-d-dfs
+  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al bu-d-dfs
   ```
   
   ```bash
-  python parallelepipedonn.py -x ../data/inputs/MNIST/7-1.csv -c 7 -nn ../nn_weights/mnist_nn-32.onnx -al td
+  python parallelepipedonn.py -x ./data/inputs/MNIST/7-1.csv -c 7 -nn ./nn_weights/mnist_nn-32.onnx -al td
   ```
 
 ### Recreate our Experiments
@@ -70,7 +70,7 @@ The `parallelepipedonn.py` script is located at the `./bin` directory.
 To recreate our experiments use the `experiments_script.py` located at the `./experiments` directory. Use the command:
 
 ```bash
-python experiments_script.py "../data/inputs/MNIST" "../nn_weights/mnist_nn-32.onnx" 35 10000 60 td
+python experiments_script.py "../data/inputs/MNIST" "./nn_weights/mnist_nn-32.onnx" 35 10000 60 td
 ```
 
 To run the Top Down algorithm on the MNIST neural network, using 35 threads, 10,000 max. iterations, and 60 min. timeout. Alternatively, you can use the `all_algos_single_dataset.sh` to apply all the recommended algorithms on a single dataset.
@@ -316,6 +316,8 @@ The version numbering follow the convention `X.Y.Z.W`:
 | **2.2.0.5**| **14/1/2026** | `Y+1`: Supporting complete cyclic dichotomic bottom up algorithm. |
 | | | `W+1`: Supporting timeout, i.e. `-t` argument. |
 | | | `W+1`: Supporting parallel execution of experiments, on pre-existing intervals. Used in algorithm composition. |
+| **2.2.0.6** | **30/3/2026** | `W+1`: Support generic numpy arrays for the interval endpoints |
+| **2.2.1.6** | **13/6/2026** | `Z+1`: Module for handling multilayer perceptrons. |
 
 ## LICENSE
 
