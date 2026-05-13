@@ -156,7 +156,7 @@ class CyclicGuarantee(circle.InfCircle):
         tmp = self.pivot.lb
         self.pivot.lb = np.array([[self.radius]])
 
-        if self.pivot.inequalities_consistency():
+        if not self.pivot.empty():
             return True
         else:
             self.pivot.lb = tmp
@@ -186,7 +186,8 @@ class CyclicGuarantee(circle.InfCircle):
         tmp = self.pivot.ub
         self.pivot.ub = np.array([[self.radius]])
 
-        if self.pivot.inequalities_consistency():
+        #if self.pivot.inequalities_consistency():
+        if not self.pivot.empty():
             return True
         else:
             self.pivot.ub = tmp

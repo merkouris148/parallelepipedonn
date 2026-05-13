@@ -50,10 +50,10 @@ class ParallelepipedalGuarantee(interval.Interval):
         self.x_star     = x_star
         self.c_star     = c_star
         self.delta      = delta
-        self.row_dim    = x_star.shape[0]
-        self.column_dim = x_star.shape[1]
-        self.dim        = self.row_dim * self.column_dim
-
+        # self.row_dim    = x_star.shape[0]
+        # self.column_dim = x_star.shape[1]
+        # self.dim        = self.row_dim * self.column_dim
+        self.shape      = x_star.shape
 
         ## ONLY for dichotomic search
         self.high_pivot = interval.Interval(self.x_star.copy(), self.domain.ub.copy())
@@ -140,26 +140,21 @@ class ParallelepipedalGuarantee(interval.Interval):
     def constrain(self, witness: np.ndarray) -> bool:
         assert witness in self
         ## Sanity check
-        old_potential = self.calc_potential()
+        old_potential = self.avg_edge_len()
 
         ind, update_ub = self.select_inequality(witness)
 
         ## Updating inequalities
         if update_ub:
             if witness[ind] - self.delta < self.x_star[ind]: return False
-            self.update_ub(
-                ind,
-                witness[ind] - self.delta
-            )
+            self.ub[ind] = witness[ind] - self.delta
+
         else:
             if witness[ind] + self.delta > self.x_star[ind]: return False
-            self.update_lb(
-                ind,
-                witness[ind] + self.delta
-            )
+            self.lb[ind] = witness[ind] + self.delta
         
         ## Sanity check
-        new_potential = self.calc_potential()
+        new_potential = self.avg_edge_len()
         assert old_potential - new_potential > 0
         
         
@@ -172,26 +167,26 @@ class ParallelepipedalGuarantee(interval.Interval):
     def generalize(self, witness: np.ndarray) -> bool:
         assert not (witness in self)
         ## Sanity check
-        old_potential = self.calc_potential()
+        old_potential = self.avg_edge_len()
 
 
         witness_interval = interval.Interval(
-            witness - self.delta * np.ones((self.row_dim, self.column_dim)),
-            witness + self.delta * np.ones((self.row_dim, self.column_dim))
+            witness - self.delta * np.ones(self.shape),
+            witness + self.delta * np.ones(self.shape)
         )
         # we need to intersect with the domain,
         # otherwise we'll go beyonds its bounds,
         # and the potential won't make sense, i.e.
         # we'll have potential > 1.
         witness_interval.intersect(self.domain)
-        self.concatenate(witness_interval)
+        self.join(witness_interval)
         
         ## Sanity check
-        new_potential = self.calc_potential()
+        new_potential = self.avg_edge_len()
         assert new_potential - old_potential > 0
         
         ## Constrain successful
-        return not self.includes(self.domain)
+        return self <= self.domain
     
     ###################################
     # Operations for Bottom Up Search #
@@ -216,28 +211,28 @@ class ParallelepipedalGuarantee(interval.Interval):
     #######################################
     
     # expand a feature by delta
-    def expand_ub(self, i, j):
+    def expand_ub(self, ind: typing.Tuple[int]):
         ## Check that the explanasion does not exceed the domain
-        if self.ub[i][j] + self.delta > self.domain.ub[i][j]: return False
+        if self.ub[ind] + self.delta > self.domain.ub[ind]: return False
 
         ## compute expansion
-        self.update_ub((i, j), self.ub[i][j] +  self.delta)
+        self.update_ub(ind, self.ub[ind] +  self.delta)
         return True
 
-    def expand_lb(self, i, j):
+    def expand_lb(self, ind: typing.Tuple[int]):
         ## Check that the explanasion does not exceed the domain
-        if self.lb[i][j] -  self.delta < self.domain.lb[i][j]: return False
+        if self.lb[ind] -  self.delta < self.domain.lb[ind]: return False
 
         ## compute expansion
-        self.update_lb((i, j), self.lb[i][j] -  self.delta)
+        self.update_lb(ind, self.lb[ind] -  self.delta)
         return True
     
     # revert a previous expansion
-    def revert_expand_ub(self, i, j):
-        self.ub[i][j] -= self.delta
+    def revert_expand_ub(self, ind: typing.Tuple[int]):
+        self.ub[ind] -= self.delta
 
-    def revert_expand_lb(self, i, j):
-        self.lb[i][j] += self.delta
+    def revert_expand_lb(self, ind: typing.Tuple[int]):
+        self.lb[ind] += self.delta
 
 
 
@@ -245,7 +240,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # Operations for Bottom Up Dichotomic DFS #
     ###########################################
 
-    def expand_dichotomic_ub(self, i: int, j: int) -> bool:
+    def expand_dichotomic_ub(self, ind: typing.Tuple[int]) -> bool:
         """ 
             #### Description:
             The expand `ub` operation used in Bottom-Up Dichotomic DFS.
@@ -264,14 +259,14 @@ class ParallelepipedalGuarantee(interval.Interval):
             Namely, iff `new_ub_ij > dom_ub_ij`
         """
 
-        new_ub_ij = self.high_pivot.lb[i][j] + (self.high_pivot.ub[i][j] - self.high_pivot.lb[i][j]) / 2
-        if new_ub_ij > self.domain.ub[i][j]: return False
+        new_ub_ij = self.high_pivot.lb[ind] + (self.high_pivot.ub[ind] - self.high_pivot.lb[ind]) / 2
+        if new_ub_ij > self.domain.ub[ind]: return False
         
-        self.update_ub((i, j), new_ub_ij)
+        self.ub[ind] = new_ub_ij
         return True
 
 
-    def expand_dichotomic_lb(self, i: int, j: int) -> bool:
+    def expand_dichotomic_lb(self, ind: typing.Tuple[int]) -> bool:
         """
             #### Description:
             The expand `lb` operation used in Bottom-Up Dichotomic DFS.
@@ -290,16 +285,16 @@ class ParallelepipedalGuarantee(interval.Interval):
             Namely, iff `new_lb_ij < dom_lb_ij`
         """
 
-        new_lb_ij = self.low_pivot.lb[i][j] + (self.low_pivot.ub[i][j] - self.low_pivot.lb[i][j]) / 2
-        if new_lb_ij < self.domain.lb[i][j]: return False
+        new_lb_ij = self.low_pivot.lb[ind] + (self.low_pivot.ub[ind] - self.low_pivot.lb[ind]) / 2
+        if new_lb_ij < self.domain.lb[ind]: return False
         
-        self.update_lb((i, j), new_lb_ij)
+        self.lb[ind] = new_lb_ij
         return True
 
 
     ## Refine high_pivot
 
-    def down_high_pivot(self, i: int, j: int) -> bool:
+    def down_high_pivot(self, ind: typing.Tuple[int]) -> bool:
         """
             #### Description:
             Refinement of the `high_pivot`, used in Bottom-Up Dichtomic DFS.
@@ -319,14 +314,14 @@ class ParallelepipedalGuarantee(interval.Interval):
             need to lower the `high_pivot.ub`.
         """
 
-        tmp = self.high_pivot.ub[i][j]
-        self.high_pivot.ub[i][j] = self.ub[i][j]
+        tmp = self.high_pivot.ub[ind]
+        self.high_pivot.ub[ind] = self.ub[ind]
 
-        if self.high_pivot.inequality_consistency((i, j)):
+        if not self.high_pivot.empty():
             return True
 
         else:
-            self.high_pivot.ub[i][j] = tmp
+            self.high_pivot.ub[ind] = tmp
             return False
 
 
@@ -348,16 +343,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     # in [high_pivot.lb, ub] are unecessary restrictive.
     # Therefore we raise the high_pivot.lb to ub.
     ###########################################################
-    def up_high_pivot(self, i, j):
+    def up_high_pivot(self, ind: typing.Tuple[int]):
         #self.high_pivot.update_lb((i,j), self.ub[i][j])
-        tmp = self.high_pivot.lb[i][j]
-        self.high_pivot.lb[i][j] = self.ub[i][j]
+        tmp = self.high_pivot.lb[ind]
+        self.high_pivot.lb[ind] = self.ub[ind]
 
-        if self.high_pivot.inequality_consistency((i, j)):
+        if not self.high_pivot.empty():
             return True
 
         else:
-            self.high_pivot.lb[i][j] = tmp
+            self.high_pivot.lb[ind] = tmp
             return False
 
 
@@ -381,16 +376,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     # in [lb, low_pivot.ub] are unecessary restrictive.
     # Therefore we lower the low_pivot.ub to lb.
     ###########################################################
-    def down_low_pivot(self, i, j):
+    def down_low_pivot(self, ind: typing.Tuple[int]):
         #self.low_pivot.update_ub((i, j), self.lb[i][j])
-        tmp = self.low_pivot.ub[i][j]
-        self.low_pivot.ub[i][j] = self.lb[i][j]
+        tmp = self.low_pivot.ub[ind]
+        self.low_pivot.ub[ind] = self.lb[ind]
 
-        if self.low_pivot.inequality_consistency((i, j)):
+        if not self.low_pivot.empty():
             return True
 
         else:
-            self.low_pivot.ub[i][j] = tmp
+            self.low_pivot.ub[ind] = tmp
             return False
 
 
@@ -410,16 +405,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     # x^c in [lb, ub]. Hence there is a counterexample in
     # [low_pivot.lb, ub]. Therefore, we raise low_pivot.lb to lb.
     ###########################################################
-    def up_low_pivot(self, i, j):
+    def up_low_pivot(self, ind: typing.Tuple[int]):
         #self.low_pivot.update_lb((i, j), self.lb[i][j])
-        tmp = self.low_pivot.lb[i][j]
-        self.low_pivot.lb[i][j] = self.lb[i][j]
+        tmp = self.low_pivot.lb[ind]
+        self.low_pivot.lb[ind] = self.lb[ind]
 
-        if self.low_pivot.inequality_consistency((i, j)):
+        if not self.low_pivot.empty():
             return True
 
         else:
-            self.low_pivot.lb[i][j] = tmp
+            self.low_pivot.lb[ind] = tmp
             return False
     
 
@@ -430,16 +425,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     # --------------------------------------------------------
     # high_pivot.ub - high_pivot.lb >= \delta
     ###########################################################
-    def high_dichotomic_invariant(self, i, j):
-        return (self.high_pivot.ub[i][j] - self.high_pivot.lb[i][j]) >= self.delta
+    def high_dichotomic_invariant(self, ind: typing.Tuple[int]):
+        return (self.high_pivot.ub[ind] - self.high_pivot.lb[ind]) >= self.delta
 
     ###########################################################
     # ParallelepipedalGuarantee.low_dichotomic_invariant()
     # --------------------------------------------------------
     # low_pivot.ub - low_pivot.lb >= \delta
     ###########################################################
-    def low_dichotomic_invariant(self, i, j):
-        return (self.low_pivot.ub[i][j] - self.low_pivot.lb[i][j]) >= self.delta
+    def low_dichotomic_invariant(self, ind: typing.Tuple[int]):
+        return (self.low_pivot.ub[ind] - self.low_pivot.lb[ind]) >= self.delta
 
     ## Revert [lb, ub] to the last "safe" position
     # only to be used with dichotomic search
@@ -471,7 +466,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     def calc_complexity(self):
         return np.sum(self.lb < self.x_star) + np.sum(self.ub > self.x_star)
 
+    
+    def get_interval(self):
+        """
+            Conversions:
+            ============
+            Returns itself. Dummy function for compatability with
+            cyclic guarantees.
+        """
 
+        return self
 
 
 class TopParallelGuarantee(ParallelepipedalGuarantee):
