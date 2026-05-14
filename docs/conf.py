@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'ParallelepipedoNN'
-copyright = '2026, Merkouris Papamichail'
-author = 'Merkouris Papamichail'
+project     = 'ParallelepipedoNN'
+copyright   = '2026, Merkouris Papamichail'
+author      = 'Merkouris Papamichail'
 
 # The full version, including alpha/beta/rc tags
-release = '2.2.0.6'
+release     = '2.2.1.6'
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,12 +50,12 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 ## Merk's edits: https://sphinx-tutorial.readthedocs.io/start/
-#html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'alabaster'
+#html_theme = 'sphinx_rtd_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-#html_static_path = ['_static']
-import sphinx_rtd_theme
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_static_path = ['_static']
+#import sphinx_rtd_theme
+#html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
