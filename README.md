@@ -7,8 +7,9 @@
 | **Author:**    | Merkouris Papamichail                                        |
 | **email:**     | mercoyris@ics.forth.gr                                       |
 | **Institute:** | Institute of Computer Science, Foundation for Research and Technology -- Hellas,<br/>Computer Science Department, University of Crete |
-| **Version:**   | 2.2.1.60                                                     |
-| **Last Edit:** | 13/6/2026                                                    |
+| **Version:**   | 2.2.1.7                                                      |
+| **Last Edit:** | 19/6/2026                                                    |
+| **Manual:**    | https://merkouris148.github.io/parallelepipedonn-manual/index.html |
 | **LICENSE**    | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License |
 
 ----
@@ -318,6 +319,7 @@ The version numbering follow the convention `X.Y.Z.W`:
 | | | `W+1`: Supporting parallel execution of experiments, on pre-existing intervals. Used in algorithm composition. |
 | **2.2.0.6** | **30/3/2026** | `W+1`: Support generic numpy arrays for the interval endpoints |
 | **2.2.1.6** | **13/6/2026** | `Z+1`: Module for handling multilayer perceptrons. |
+| **2.2.1.7** | **19/6/2026** | `W+1`: New on-line manual available. |
 
 ## LICENSE
 
