@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70218" creator="Ipe 7.2.30">
-<info created="D:20260111210557" modified="D:20260111210557"/>
+<info created="D:20260111210557" modified="D:20260205011629"/>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -313,21 +313,21 @@ h
 <page>
 <layer name="alpha"/>
 <view layers="alpha" active="alpha"/>
-<text layer="alpha" matrix="1 0 0 1 0 -40" transformations="translations" pos="208 736" stroke="black" type="label" width="216.835" height="15.146" depth="5.51" valign="baseline" size="Huge">\texttt{ParallelepipedoNN}</text>
-<text transformations="translations" pos="344 712" stroke="black" type="label" width="5.153" height="3.542" depth="0" valign="baseline" size="footnote" style="math">\mathbf{x}</text>
-<use name="mark/disk(sx)" pos="204 688" size="normal" stroke="black"/>
-<use name="mark/disk(sx)" pos="428 716" size="normal" stroke="black"/>
-<path stroke="black">
+<text layer="alpha" matrix="1 0 0 1 0 -40" transformations="translations" pos="208 736" stroke="white" type="label" width="216.835" height="15.146" depth="5.51" valign="baseline" size="Huge">\texttt{ParallelepipedoNN}</text>
+<text transformations="translations" pos="344 712" stroke="white" type="label" width="5.153" height="3.542" depth="0" valign="baseline" size="footnote" style="math">\mathbf{x}</text>
+<use name="mark/disk(sx)" pos="204 688" size="normal" stroke="white"/>
+<use name="mark/disk(sx)" pos="428 716" size="normal" stroke="white"/>
+<path stroke="white">
 208 688 m
 428 688 l
 428 712 l
 </path>
-<path stroke="black">
+<path stroke="white">
 204 692 m
 204 716 l
 424 716 l
 </path>
-<text transformations="translations" pos="432 720" stroke="black" type="label" width="10.848" height="5.535" depth="0" valign="baseline" size="footnote" style="math">\mathbf{ub}</text>
-<text matrix="1 0 0 1 8 4" transformations="translations" pos="192 680" stroke="black" type="label" width="8.136" height="5.535" depth="0" halign="right" valign="top" size="footnote" style="math">\mathbf{lb}</text>
+<text transformations="translations" pos="432 720" stroke="white" type="label" width="10.848" height="5.535" depth="0" valign="baseline" size="footnote" style="math">\mathbf{ub}</text>
+<text matrix="1 0 0 1 8 4" transformations="translations" pos="192 680" stroke="white" type="label" width="8.136" height="5.535" depth="0" halign="right" valign="top" size="footnote" style="math">\mathbf{lb}</text>
 </page>
 </ipe>
