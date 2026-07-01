@@ -7,12 +7,13 @@
 | **Author:**    | Merkouris Papamichail                                        |
 | **email:**     | mercoyris@ics.forth.gr                                       |
 | **Institute:** | Institute of Computer Science, Foundation for Research and Technology -- Hellas,<br/>Computer Science Department, University of Crete |
-| **Version:**   | 2.2.3.10                                                      |
+| **Version:**   | 2.2.3.10                                                     |
 | **Last Edit:** | 13/6/2026                                                    |
 | **Manual:**    | https://merkouris148.github.io/parallelepipedonn-manual/index.html |
 | **LICENSE**    | Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License |
+| **Pre-print:** | https://arxiv.org/abs/2606.23858                             |
 
-----
+------
 
 ## Installation
 
@@ -181,6 +182,22 @@ The version numbering follow the convention `X.Y.Z.W`:
 |   ✔    | 10/4/2026 | 10/6/2026 | **Problem with output path.** This issue was reported by the master students in CS-567. The outputs were not saved to the correct directory. |
 
 
+
+## Cite
+
+If you use our software, please cite this work as follows.
+
+```latex
+@misc{papamichail2026safetyguaranteesneuralnetworks,
+      title={Are Safety Guarantees in Neural Networks Safe? How to Compute Trustworthy Robustness Certifications}, 
+      author={Merkouris Papamichail and Konstantinos Varsos and Giorgos Flouris and João Marques-Silva},
+      year={2026},
+      eprint={2606.23858},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2606.23858}, 
+}
+```
 
 ## LICENSE
 
