@@ -1,15 +1,24 @@
+# typing
+import typing as t
+import numpy as np
+
+# custom libraries
+import sys
+sys.path.append('..')
+import geometry.interval as interval
+
 ###################
 # NN Varification #
 ###################
 class NNVerification:
     ## Constructor
-    def __init__(self, c_star, model_description):
+    def __init__(self, c_star: int, model_description: t.Any):
         # Parameters
         self.c_star             = c_star
         self.model_description  = model_description
 
         # Statistics
-        self.total_time     = 0
+        self.total_time     = 0.0
         self.num_calls      = 0
         self.num_timeouts   = 0
     
@@ -34,5 +43,12 @@ class NNVerification:
         self.total_time += call_time
 
     ## Operations
-    def __call__(self, bounds):
+    def __call__(
+            self,
+            bounds:interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
         raise NotImplementedError

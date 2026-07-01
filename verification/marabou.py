@@ -3,11 +3,12 @@
 #############
 # python libraries
 import time
+import typing as t
 
 # 3rd party libraries
 import numpy as np
 
-from maraboupy import Marabou
+from maraboupy import Marabou       # type: ignore[import-untyped] # MyPy
 from maraboupy import MarabouCore
 from maraboupy import MarabouUtils
 
@@ -16,7 +17,10 @@ import sys
 sys.path.append('..')
 import verification.nn_verification as nn_verif
 
-from geometry.constants import epsilon
+#from geometry.numerical import epsilon as eps
+import geometry.interval as interval
+
+eps = 0.09  # DO NOT CHANGE DIS!
 
 
 #############
@@ -46,7 +50,12 @@ wrong_class_exit_code = 10
 ####################
 # Helper Functions #
 ####################
-def marabou2numpy(counterexample_dict, select_first_n, row_dim, column_dim):
+def marabou2numpy(
+        counterexample_dict: t.Dict,
+        select_first_n,
+        row_dim: int,
+        column_dim: int
+    ) -> np.ndarray:
     return np.array(list(counterexample_dict.values()))[0:select_first_n].reshape((row_dim, column_dim))
 
 
@@ -66,7 +75,24 @@ class MarabouVerification(nn_verif.NNVerification):
     # geometry.constants.epsilon.
     # * epsilon here is the slack between the maximum score of the
     # predictor and the rest of the values
-    def __init__(self, c_star, model_path_onnx, domain, epsilon=1):
+    def __init__(
+            self,
+            c_star: int,
+            model_path_onnx: str,
+            domain: interval.Interval,
+            epsilon: float              = 1.0
+        ):
+        """
+        Constructor
+        -----------
+        *NOTE:*
+        
+        * Marabou seems to be *extremely* sensitive to the epsilon value.
+        * Note that the epsilon defined here, differs from: `geometry.constants.epsilon`.
+        * `epsilon` here is the slack between the maximum score of the predictor and
+        * the rest of the values
+        
+        """
         ## Initialize super class
         super().__init__(c_star, Marabou.read_onnx(model_path_onnx))
 
@@ -110,7 +136,11 @@ class MarabouVerification(nn_verif.NNVerification):
 
 
     ## Predicates
-    def check_witness(self, witness, bounds):
+    def check_witness(
+            self,
+            witness: np.ndarray,
+            bounds: interval.Interval
+        ) -> bool:
         raise NotImplementedError()
 
     ## Predictions
@@ -122,12 +152,21 @@ class MarabouVerification(nn_verif.NNVerification):
     # redirect the output of the evaluation method.
     # * We pass an empty string, since we set verbose=False at the
     # options. Thus, keeping the evaluation silent.
-    def predict(self, X):
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """
+        Predictions
+        -----------
+        
+        * The second argument in the evaluate() method is a flag for using Marabou for the evaluation.
+        * Using Marabou to make prediction is *completely* unstable! so its usage is discouraged.
+        * The last argument of the evaluate() method is a path to redirect the output of the evaluation method.
+        * We pass an empty string, since we set `verbose=False` at the options. Thus, keeping the evaluation silent.
+        """
         return self.model_description.evaluate([X], False, self.options, "")
     
-    def predict_argmax(self, X):
+    def predict_argmax(self, X: np.ndarray) -> t.Tuple[int, float]:
         predictions_vector  = self.predict(X)[0][0]
-        prediction_class    = np.argmax(predictions_vector)
+        prediction_class    = int(np.argmax(predictions_vector))
         prediction_value    = predictions_vector[prediction_class]
 
         return prediction_class, prediction_value
@@ -136,7 +175,14 @@ class MarabouVerification(nn_verif.NNVerification):
 
     ## Operations
     ## Checking Explanation's Soundness
-    def __call__(self, bounds):
+    def __call__(
+            self,
+            bounds: interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
         marabou_tic = time.time()
         marabou_val = self.model_description.solve(options=self.options, verbose=False)
         marabou_toc = time.time()
@@ -167,7 +213,13 @@ class MarabouVerification(nn_verif.NNVerification):
 # Sound Marabou Verifier #
 ##########################
 class SoundMarabouVerifier(MarabouVerification):
-    def __init__(self, c_star, model_path_onnx, domain, epsilon=1):
+    def __init__(
+            self,
+            c_star: int,
+            model_path_onnx: str,
+            domain: interval.Interval,
+            epsilon: float              = 1.0
+        ):
         super().__init__(c_star, model_path_onnx, domain, epsilon)
 
         ## Set Ouput Constraints For Negative Counter Examples
@@ -193,7 +245,14 @@ class SoundMarabouVerifier(MarabouVerification):
     ###############
     # Call Method #
     ###############
-    def __call__(self, bounds):
+    def _solve_query(
+            self,
+            bounds: interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
         ## set input constraints
         for i in range(self.inputVars.shape[0]):
             for j in range(self.inputVars.shape[1]):
@@ -206,12 +265,45 @@ class SoundMarabouVerifier(MarabouVerification):
                                                 bounds.lb[i][j]
                                             )
 
-        return super().__call__(bounds)
+        return super().__call__(bounds, x_star)
+    
+    def __call__(
+            self,
+            bounds: interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
 
+        x_star_interval = interval.Interval(
+            x_star,
+            x_star
+        )
+
+        current_bounds = x_star_interval + (bounds - x_star_interval) / 2.0
+
+        eps_interval = interval.Interval(
+            -eps*np.ones(bounds.shape),
+            eps*np.ones(bounds.shape)
+        )
+        while bounds - current_bounds > eps_interval:
+            soundness, witness = self._solve_query(current_bounds, x_star)
+            if not soundness: return soundness, witness
+
+            ## update curent bounds
+            current_bounds = x_star_interval + (current_bounds - x_star_interval) / 2.0
+
+        return self._solve_query(bounds, x_star)
+    
     ###########################
     # Check Marabou's Witness #
     ###########################
-    def check_witness(self, witness, bounds):
+    def check_witness(
+            self,
+            witness: np.ndarray,
+            bounds: interval.Interval
+        ) -> bool:
         prediction, _ =  self.predict_argmax(witness)
 
         ## make sure that the counter example is indeed a counterexample:
@@ -223,19 +315,21 @@ class SoundMarabouVerifier(MarabouVerification):
         # as x_star, we cannot proceed with the explanation's
         # refinement. Thus we treat this oracle call as 'sat'
         # and terminate the search returning the current results
-        if prediction == self.c_star:
+        if prediction != self.c_star: return True
+        else:
             print(
                 "Witness' class: ", str(prediction), "c_star:", self.c_star,
                 file=sys.stderr
             )
-            if wrong_class_sat:
+            if not wrong_class_sat: return False
+            else:
                 print(
                     "Treating wrong class as sat",
                     file=sys.stderr
                 )
-                return True, None
-            else:
-                exit(wrong_class_exit_code)
+                return True
+            # else:
+            #     exit(wrong_class_exit_code)
 
 
 
@@ -243,7 +337,13 @@ class SoundMarabouVerifier(MarabouVerification):
 # Complete Marabou Verifier #
 #############################
 class CompleteMarabouVerifier(MarabouVerification):
-    def __init__(self, c_star, model_path_onnx, domain, epsilon=1.0):
+    def __init__(
+            self,
+            c_star: int,
+            model_path_onnx: str,
+            domain: interval.Interval,
+            epsilon: float              = 1.0
+        ):
         super().__init__(c_star, model_path_onnx, domain, epsilon)
 
         for y in range(len(self.outputVars)):
@@ -260,7 +360,14 @@ class CompleteMarabouVerifier(MarabouVerification):
     ###############
     # Call Method #
     ###############
-    def __call__(self, bounds):
+    def _solve_query(
+            self,
+            bounds: interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
         # clear previous disjunctions
         self.model_description.disjunctionList = []
         out_constraints = []
@@ -284,33 +391,65 @@ class CompleteMarabouVerifier(MarabouVerification):
         
         self.model_description.addDisjunctionConstraint(out_constraints)
 
-        return super().__call__(bounds)
+        return super().__call__(bounds, x_star)
+    
+    def __call__(
+            self,
+            bounds: interval.Interval,
+            x_star: np.ndarray
+        ) -> t.Tuple[
+            bool,
+            t.Optional[np.ndarray]
+        ]:
+
+        current_bounds = bounds + (self.domain - bounds) / 2.0
+
+        eps_interval = interval.Interval(
+            -eps*np.ones(bounds.shape),
+            eps*np.ones(bounds.shape)
+        )
+        while current_bounds - bounds > eps_interval:
+            completeness, witness = self._solve_query(current_bounds, x_star)
+            if not completeness: return completeness, witness
+
+            ## update curent bounds
+            current_bounds = bounds + (current_bounds - bounds) / 2.0
+        
+        return self._solve_query(current_bounds, x_star)
+
+        
 
     ###########################
     # Check Marabou's Witness #
     ###########################
-    def check_witness(self, witness, bounds):
+    def check_witness(
+            self,
+            witness: np.ndarray,
+            bounds: interval.Interval
+        ) -> bool:
         prediction, _ =  self.predict_argmax(witness)
 
         ## make sure that the counter example is indeed a counterexample:
         # a) counterexample's class is different than c_star
         # b) counterexample belongs to the bounds
-        assert not (witness in bounds), "Witness in bounds"
+        assert witness not in bounds, "Witness in bounds"
         ## Some exception handling
         # If the counterexample belong's to the same class
         # as x_star, we cannot proceed with the explanation's
         # refinement. Thus we treat this oracle call as 'sat'
         # and terminate the search returning the current results
-        if prediction != self.c_star:
+        if prediction == self.c_star: return True
+        else:
             print(
                 "Witness' class: ", str(prediction), "c_star:", self.c_star,
                 file=sys.stderr
             )
-            if wrong_class_sat:
+            if not wrong_class_sat: return False
+            else:
                 print(
                     "Treating wrong class as sat",
                     file=sys.stderr
                 )
-                return True, None
-            else:
-                exit(wrong_class_exit_code)
+                return True
+            # else:
+            #     exit(wrong_class_exit_code)
