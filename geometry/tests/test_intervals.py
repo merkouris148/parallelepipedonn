@@ -9,7 +9,7 @@ sys.path.append("..")
 
 import numpy as np
 
-import interval
+import geometry.interval as interval
 
 class IntervalTest(unittest.TestCase):
     def __init__(self, methodName = "Testing Intervals"):

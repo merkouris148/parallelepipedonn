@@ -44,10 +44,10 @@ class Circle:
     """
     def __init__(
             self, 
-            center: np.ndarray,                                 # center of the circle
-            radius: float,                                      # radius of the circle
-            norm:   Callable[[np.ndarray, np.ndarray], float]   # a function IR^d x IR^d --> IR_{>= 0}
-        ):
+            center: np.ndarray,                     # center of the circle
+            radius: float,                          # radius of the circle
+            norm:   Callable[[np.ndarray], float]   # a function IR^d x IR^d --> IR_{>= 0}
+        ) -> None:
         assert radius >= 0
 
         ## Dimensions
@@ -75,7 +75,7 @@ class Circle:
         """
             Return the radius
         """
-        return self.radius
+        return self.center
     
     ## Mutators
     def set_radius(self, new_radius:float):
@@ -134,7 +134,7 @@ class InfCircle(Circle):
         * Since inf-circle is a box in IR^d, we implement a conversion method
     """
     ## Initialization
-    def __init__(self, center, radius):
+    def __init__(self, center: np.ndarray, radius: float) -> None:
 
         ## Initialize super class
         super().__init__(center, radius, norms.inf_norm)

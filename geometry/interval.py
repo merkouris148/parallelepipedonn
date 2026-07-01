@@ -33,8 +33,8 @@ except ImportError as _:
 
 #custom libraries
 # from norms import inf_norm
-# from constants import epsilon
-# from norms import inf_norm
+import geometry.numerical as num
+from geometry.norms import inf_norm
 # from constants import epsilon
 
 
@@ -48,23 +48,26 @@ except ImportError as _:
 ###########################################################
 class Interval:
     """
-        A class encoding a *high-dimensional* interval `[lb, ub]`, where\\
-        `lb, ub \in IR^d`. An interval is defined as:
-        ```
+    A class encoding a *high-dimensional* interval ``[lb, ub]``, where
+    `lb, ub \in IR^d`. An interval is defined as: ::
+    
         [lb, ub] = {x \in IR^d | lb <= x <= ub}
-        ```
-        **Data Members:**
-        * `lb: np.ndarray`, the lower bound.
-        * `ub: np.ndarray`, the upper bound.
+    
+    **Data Members:**
 
-        **Notes:**
-        * The class is completely compatible with NumPy's ndarrays and\\
-        is able to handle general multidimensional arrays instead of\\
-        1D vectors.
+    * `lb: np.ndarray`, the lower bound.
+    * `ub: np.ndarray`, the upper bound.
 
-        **Refferences:**
-        * Theory of an Interval Algebra and Its Application to Numerical Analysis --
-        Teruo Sunaga (1958).
+    **Notes:**
+
+    The class is completely compatible with NumPy's ndarrays and
+    is able to handle general multidimensional arrays instead of
+    1D vectors.
+
+    **Refferences:**
+
+    Theory of an Interval Algebra and Its Application to Numerical Analysis --
+    Teruo Sunaga (1958).
     """
     ################
     # Constructors #
@@ -85,7 +88,7 @@ class Interval:
     
     def __copy__(self):
         """
-            Copy constructor.
+        Copy constructor.
         """
         return Interval(self.lb.copy(), self.ub.copy())
     
@@ -95,7 +98,7 @@ class Interval:
     ##########
     def __str__(self) -> str:
         """
-            Short `str` report.
+        Short ``str`` report.
         """
         s = "interval[\n"
         s +=  str(self.lb) + ",\n"
@@ -106,12 +109,12 @@ class Interval:
 
     def extended_str(self) -> str:
         """
-            Extentent `str` report.
+        Extentent ``str`` report.
         """
         s = "\n\n" + str(self) + "\n\n"
 
         s += f"{'Diam.:':<17}"          + str(self.diam())              + "\n"
-        s += f"{'Min. Edge Len.:':<17}" + str(self.min_edge_length())   + "\n"
+        s += f"{'Min. Edge Len.:':<17}" + str(self.min_edge_len())   + "\n"
         s += f"{'Avg. Edge Len.:':<17}" + str(self.avg_edge_len())      + "\n"
         s += f"{'Vol.:':<17}"            + str(self.vol())               + "\n"
 
@@ -135,14 +138,18 @@ class Interval:
             Checks if the interval is empty, i.e.,
             `ub < lb`.
         """
-        return ((self.ub < self.lb).all()) == True
+        #return bool((self.ub < self.lb).all()) == True
+        return num.real_less(self.ub, self.lb)
     
+
     def sigleton(self) -> bool:
         """
             Check if the interval is a sigleton, i.e.,
             `[x, x]`.
         """
-        return ((self.ub == self.lb).all()) == True
+        #return bool((self.ub == self.lb).all()) == True
+        return num.real_eq(self.lb, self.ub)
+
 
     def is_positive(self) -> bool:
         """
@@ -150,16 +157,20 @@ class Interval:
             quadrant.
         """
         O = np.zeros(self.shape)
-        return ((self.ub >= O).all() and (self.lb >= O).all()) == True
-    
+        #return (bool((self.ub >= O).all()) and bool((self.lb >= O).all())) == True
+        return not self.empty() and num.real_geq(self.lb, O)
+
+
     def is_negative(self) -> bool:
         """
             Check if the interval belongs to the negative
             quadrant.
         """
         O = np.zeros(self.shape)
-        return ((self.ub <= O).all() and (self.lb <= O).all()) == True
+        #return (bool((self.ub <= O).all()) and bool((self.lb <= O).all())) == True
+        return not self.empty() and num.real_leq(self.ub, O)
     
+
     ####################
     # Interval Algebra #
     ####################
@@ -168,8 +179,14 @@ class Interval:
         """
             Checking if `x \in I`.
         """
-        if self.shape != x.shape: return False
-        return (self.lb <= x).all() and (x <= self.ub).all()
+        #print("aaaaaaaAAAAAAAAAAA")
+        #if self.shape != x.shape: return False
+        #print((self.lb <= x).all())
+        #print(x <= self.ub)
+        #print(x[1][10], self.ub[1][10])
+        #return bool((self.lb <= x).all() and (x <= self.ub).all())
+        return num.real_leq(self.lb, x) and num.real_leq(x, self.ub)
+
 
     ## Equality & Inequality
     def __eq__(self, interval) -> bool:
@@ -184,8 +201,10 @@ class Interval:
 
         if self.empty() and interval.empty(): return True
 
-        if self.shape != interval.shape: return False
-        return (self.lb == interval.lb).all() and (self.ub == interval.ub).all()
+        #if self.shape != interval.shape: return False
+        #return bool((self.lb == interval.lb).all()) and bool((self.ub == interval.ub).all())
+        return num.real_eq(self.lb, interval.lb) and num.real_eq(self.ub, interval.ub)
+
 
     def __ne__(self, interval) -> bool:
         """
@@ -193,30 +212,36 @@ class Interval:
         """
         return not self == interval
 
+
     ## Comparisons
     def __lt__(self, interval) -> bool:
         """
             Checking if `I1 \subset I2`.
         """
-        return (interval.lb < self.lb).all() and (self.ub < interval.ub).all()
+        #return bool((interval.lb < self.lb).all()) and bool((self.ub < interval.ub).all())
+        return num.real_less(interval.lb, self.lb) and num.real_less(self.ub, interval.ub)
+
 
     def __le__(self, interval) -> bool:
         """
             Checking if `I1 \subseteq I2`.
         """
-        return (interval.lb <= self.lb).all() and (self.ub <= interval.ub).all()
+        #return bool((interval.lb <= self.lb).all()) and bool((self.ub <= interval.ub).all())
+        return num.real_leq(interval.lb, self.lb) and num.real_leq(self.ub, interval.ub)
 
     def __gt__(self, interval) -> bool:
         """
             Checking if `I1 \supset I2`.
         """
-        return (interval.lb > self.lb).all() and (self.ub > interval.ub).all()
+        #return bool((interval.lb > self.lb).all()) and bool((self.ub > interval.ub).all())
+        return num.real_less(self.lb, interval.lb) and num.real_less(interval.ub, self.ub)
 
     def __ge__(self, interval) -> bool:
         """
             Checking if `I1 \supseteq I2`.
         """
-        return (interval.lb >= self.lb).all() and (self.ub >= interval.ub).all()
+        #return bool((interval.lb >= self.lb).all()) and bool((self.ub >= interval.ub).all())
+        return num.real_leq(self.lb, interval.lb) and num.real_leq(interval.ub, self.ub)
 
     ## Operations on Intervals
     ## self <-- self \sqcup interval
@@ -312,6 +337,19 @@ class Interval:
         return new_interval
 
 
+    def __mul__(self, value: float):
+        vector_value = value * np.ones(self.lb.shape)
+
+        lb_new = self.lb * vector_value
+        ub_new = self.ub * vector_value
+
+        new_interval = Interval(lb_new, ub_new)
+        return new_interval
+
+
+    def __truediv__(self, value: float):
+        return self.__mul__(value**-1)
+
     ## Vertices
     def get_vertices(self) -> np.ndarray:
         """
@@ -341,7 +379,7 @@ class Interval:
             
 
     ## Metrics
-    def diam(self):
+    def diam(self) -> float:
         """
             Computing the *diameter* of the interval, i.e.,
             ```
@@ -351,11 +389,11 @@ class Interval:
         return inf_norm(self.ub - self.lb)
 
 
-    def vol(self):
+    def vol(self) -> float:
         """
-            Computing the *volume* of the interval. If `mpmath` is imported,
-            we use arbitrary percision arithmetic. In not, there may be some
-            serious underflow in the volume computation.
+        Computing the *volume* of the interval. If `mpmath` is imported,
+        we use arbitrary percision arithmetic. In not, there may be some
+        serious underflow in the volume computation.
         """
         edge_lengths    = np.abs(self.ub - self.lb)
         vol             = 0.0
@@ -365,7 +403,8 @@ class Interval:
                 print("Warning [geometry.intervals]: mpmath is not installed!")
                 print("Volume computation might be inacurate!")
             
-            vol = np.prod(edge_lengths, dtype=np.float64)
+            #vol = np.prod(edge_lengths, dtype=np.float64)
+            vol = np.prod(edge_lengths)
         
         else:
             with mpm.workdps(self.dim):
@@ -373,30 +412,62 @@ class Interval:
 
         return vol
     
+    def perimeter(self) -> float:
+        """
+        Computing the *perimeter*.
+        """
+        return round(np.sum(self.ub - self.lb), 4)
 
     # Average coordinate-wise diameter as potential
-    def avg_edge_len(self):
+    def avg_edge_len(self) -> float:
         """
-            Computing the *average* edge length.
+        Computing the *average* edge length.
         """
-        return round(np.sum(self.ub - self.lb) / self.dim, 4)
+        return round(self.perimeter() / self.dim, 4)
 
 
-    def min_edge_length(self):
+    def min_edge_len(self) -> float:
         """
-            Computing *minimum* edge length.
+        Computing *minimum* edge length.
         """
-        return np.min(self.ub - self.lb)
-    
-    
+        return round(np.min(self.ub - self.lb), 4)
+
+
+    def ub_apothem(self, x_star: np.ndarray) -> float:
+        """
+        Computing *upper bound apothem*.
+        """
+        #return round(np.min(self.ub - x_star), 4)
+        y = self.ub - x_star
+        if not (y > 0.0).any(): return np.inf
+        else:                   return round(np.min(y[y > 0.0]), 4)
+
+
+    def lb_apothem(self, x_star: np.ndarray) -> float:
+        """
+        Computing *lower bound apothem*.
+        """
+        #return round(np.min(x_star - self.lb), 4)
+        y = x_star - self.lb
+        if not (y > 0.0).any(): return np.inf
+        else:                   return round(np.min(y[y > 0.0]), 4)
+
+
+    def apothem(self, x_star: np.ndarray) -> float:
+        """
+        Computing *apothem*.
+        """
+        return min(self.ub_apothem(x_star), self.lb_apothem(x_star))
+
+
     ############
     # Sampling #
     ############
     def random_points(self, N=1000, seed=0):
         """
-            Returning `N` number of *uniformly* drawn points inside the
-            interval. With `seed` we denote the seed of the Random Number
-            Generator.
+        Returning `N` number of *uniformly* drawn points inside the
+        interval. With `seed` we denote the seed of the Random Number
+        Generator.
         """
         assert N > 0
         rnjeasus    = np.random.default_rng(seed)

@@ -1,0 +1,35 @@
++-----------------+
+| Test: Test Ops
+| Date: 20/5/2026
++-----------------+
+
+Diammeter: 2.0
+Diammeter: 1.9999989999999999
+Diammeter: 1.8999989999971243
+Diammeter: 1.7999989999942487
+Diammeter: 1.6999989999913732
+Diammeter: 1.5999989999884976
+Diammeter: 1.4999989999856223
+Diammeter: 1.3999989999882978
+Diammeter: 1.2999989999909733
+Diammeter: 1.1999989999922611
+Diammeter: 1.099998999992161
+
+ 1000000 meet operations in 10.6114 (secs)
+.
+Diammeter: 2.0
+Diammeter: 2.000001
+Diammeter: 2.1000009999917735
+Diammeter: 2.200000999983547
+Diammeter: 2.30000099997532
+Diammeter: 2.4000009999670935
+Diammeter: 2.500000999958867
+Diammeter: 2.60000099995064
+Diammeter: 2.7000009999424135
+Diammeter: 2.800000999934187
+Diammeter: 2.90000099992596
+
+ 1000000 join operations in 10.993 (secs)
+.
+----------------------------------------------------------------------
+Ran 2 tests in 21.605s
