@@ -14,7 +14,7 @@ import numpy as np
 import sys
 sys.path.append("..")
 import geometry.interval as intervals
-import perceptrons.multilayer as mlp
+import perceptrons.tfmultilayer as mlp
 
 ###########
 # Classes #

@@ -10,7 +10,7 @@ sys.path.append("..")
 
 import numpy as np
 
-import multilayer as mlp
+import perceptrons.tfmultilayer as mlp
 
 class FromDirTest(unittest.TestCase):
     def __init__(self, methodName = "Testing MLP Generation from Dir"):

@@ -9,7 +9,7 @@ sys.path.append("..")
 
 import numpy as np
 
-import multilayer as mlp
+import perceptrons.tfmultilayer as mlp
 import convex
 
 class ConvexApproxTest(unittest.TestCase):
