@@ -1,6 +1,6 @@
 class app:
     name        = "parallelepipedonn.py"
-    version     = "2.2.0.5"
+    version     = "2.2.3.9"
     author      = "Merkouris Papamichail"
     institute_1 = "Institute of Computer Science, FORTH"
     institute_2 = "Computer Science Department, UoC"

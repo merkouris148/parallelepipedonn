@@ -122,6 +122,7 @@ quiet          = 16
 help           = 17
 verif          = 18
 timeout        = 19
+log_file       = 20
 
 
 cli_args = {
@@ -152,6 +153,7 @@ cli_args = {
         dom_ub:         "-du",
         dom_lb:         "-dl",
         timeout:        "-t",
+        log_file:       "-lg",
 
         # Verifier
         verif:          "-v",
@@ -224,6 +226,7 @@ defaults = {
         dom_lb:         0,
         dom_ub:         1,
         timeout:        60,
+        log_file:       False,
 
         # Interface
         no_out:         False,

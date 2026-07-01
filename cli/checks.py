@@ -217,6 +217,7 @@ check_argument = {
         args.dom_ub:         check_dom_lb,
         args.dom_lb:         check_dom_ub,
         args.timeout:        check_timeout,
+        args.log_file:       check_no_errors,
         
         # Interface
         args.no_out:         check_no_errors,

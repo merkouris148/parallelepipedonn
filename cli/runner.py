@@ -46,6 +46,7 @@ class Runner(loader.Loader):
             " ",
             self[args.lb_path],
             self[args.ub_path],
+            self[args.log_file]
         )
 
         ## Header

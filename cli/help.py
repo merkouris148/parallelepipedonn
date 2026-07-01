@@ -31,6 +31,7 @@ help_msg = {
         args.max_it:        "max. number of iterations",
         args.rad:           "the distance restriction radius",
         args.delta:         "delta, percision parameter",
+        args.log_file:      "write log to output dir",
         
         # Domain
         args.dom_lb:        "the scalar of the domain's lower bound",
@@ -78,6 +79,7 @@ example_msg = {
         args.rad:           "<rad>",
         args.delta:         "<delta>",
         args.timeout:       "<timeout (mins)>",
+        args.log_file:      None,
         
         # Domain
         args.dom_lb:        "<dom_lb>",
@@ -124,6 +126,7 @@ domain_msg = {
         args.max_it:        "integer",
         args.rad:           "float",
         args.delta:         "float",
+        args.log_file:      None,
         
         # Domain
         args.dom_lb:        "float",
@@ -172,6 +175,7 @@ default_msg = {
         args.rad:           "1.0",
         args.delta:         "0.1",
         args.timeout:       "60",
+        args.log_file:      None,
 
         # Domain
         args.dom_lb:        "0.0",

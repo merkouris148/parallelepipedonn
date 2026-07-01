@@ -8,7 +8,8 @@
 
 ## Python Libraries
 import os
-import sys
+#import sys
+import datetime
 
 ## 3rd Party Libraries
 import numpy as np
@@ -25,6 +26,7 @@ import verification.marabou as marabou_verif
 import guarantees.parallelepipedal as psg
 import guarantees.cyclic as csg
 import geometry.interval as geom
+import geometry.circle as geomc
 
 
 
@@ -87,7 +89,9 @@ class Application:
 
             ## Bounds from files
             lb_path:        str = "",
-            ub_path:        str = ""
+            ub_path:        str = "",
+
+            log_file:       bool = False
         ):
 
         ####################
@@ -115,7 +119,7 @@ class Application:
 
         ## Guarantee instance
         self.x_star = np.genfromtxt(x_star_path, delimiter=delimeter)
-        print("x_star shape: ", self.x_star.shape, file=sys.stderr)
+        #print("x_star shape: ", self.x_star.shape, file=sys.stderr)
         self.c_star = c_star
 
         ## Algo parameters
@@ -123,6 +127,7 @@ class Application:
         self.delta      = delta
         self.max_it     = max_it
         self.verbose    = verbose
+        self.log_file   = log_file
 
         ## Domain
         self.dom_lb = dom_lb
@@ -131,6 +136,10 @@ class Application:
             self.dom_lb * np.ones(self.x_star.shape),
             self.dom_ub * np.ones(self.x_star.shape)
         )
+        ## Handling distance restriction
+        dist_restrict           = geomc.InfCircle(self.x_star, self.rad)
+        dist_restrict_interval  = dist_restrict.get_interval()
+        self.domain.intersect(dist_restrict_interval)
 
         ## Timeout
         self.timeout = timeout
@@ -157,7 +166,10 @@ class Application:
         ############################
         self.guarantee  = None  # current explanation
         self.algo       = None  # algorithm
-
+        # Quick Patch Merk. 10/6/2026
+        # if log path argument is given, write a log to the
+        # output path
+        log_path        = self.output_path if self.log_file else None
         if method in args.algo_args.keys():
             self.guarantee, \
             self.algo       \
@@ -171,7 +183,8 @@ class Application:
                     self.isSAT,
                     self.max_it,
                     self.timeout,
-                    self.verbose
+                    self.verbose,
+                    log_path
             )
         else: errors.print_error_message(errors.error_unknown_method)
 
@@ -193,9 +206,8 @@ class Application:
 
     def check_class_oracle_consistency(self) -> bool:
         """
-                #### Description:
-                Check if `c* == κ(x*)`.
-            """
+        Check if `c* == κ(x*)`.
+        """
         oracle_prediction = self.isSAT.predict_argmax(self.x_star)[0]
         
         ## check that indeed k(x_star) = c_star
@@ -274,6 +286,7 @@ class Application:
     def print_input(self):
         print("\n# I/O Info")
         print("=" * 60)
+        print(f"{'Date:':<22}"                  + str(datetime.datetime.now()))
         print(f"{'Input:':<23}"                 + self.x_star_path)
         print(f"{'ONNX Descr.:':<23}"           + self.onnx_path)
         print(f"{'Output Path Pfx:':<23}"       + self.output_path)
@@ -284,14 +297,14 @@ class Application:
     def print_setup(self):
         print("\n# Setup")
         print("=" * 60)
-        print(f"{'Method:':<22}"                + self.algo.msg_prefix)
-        print(f"{'Max. It.:':<22}"              + str(self.algo.max_it))
-        print(f"{'Set Timeout:':<22}"           + str(self.algo.timeout) + " (mins)")
+        print(f"{'Method:':<22}"                    + self.algo.msg_prefix)
+        print(f"{'Max. It.:':<22}"                  + str(self.algo.max_it))
+        print(f"{'Set Timeout:':<22}"               + str(self.algo.timeout) + " (mins)")
         if isinstance(self.guarantee, csg.CyclicGuarantee):
             print(f"{'Radius Dist. Restr.:':<22}"   + str(self.guarantee.distance_restriction))
         else:
             print(f"{'Radius Dist. Restr.:':<22}"   + str(self.guarantee.radius))
-        print(f"{'Delta:':<22}"                 + str(self.guarantee.delta))
+        print(f"{'Delta:':<22}"                     + str(self.guarantee.delta))
         print("-" * 60 + "\n")
 
     def print_results(self):
@@ -301,15 +314,41 @@ class Application:
         print(f"{'Num. It.:':<22}"          + str(self.algo.num_it))
         print(f"{'Time:':<22}"              + str(round(self.algo.total_time, 2)) + " (secs)")
         print(f"{'Comp.:':<22}"             + str(self.guarantee.calc_complexity()))
-        min_edge_len = None
-        if isinstance(self.guarantee, csg.CyclicGuarantee):
-            interval = self.guarantee.get_interval()
-            interval.intersect(self.domain)
-            min_edge_len = interval.min_edge_length()
-        else:
-            min_edge_len = self.guarantee.min_edge_length()
+
+        ###############
+        # Quick Patch #
+        ###############
+        print("-" * 60)
+        ## Minimum Edge Length
+        interval = self.guarantee.get_interval()
+        interval.intersect(self.domain)
+        min_edge_len = interval.min_edge_len()            
         print(f"{'Min. Edge Length:':<22}"      + str(round(min_edge_len, 4)))
+
+        ## Maximum Edge Length
+        diameter = interval.diam()            
+        print(f"{'Diameter:':<22}"              + str(round(diameter, 4)))
+
+        ## Average Edge Length
+        avg_edge_len = interval.avg_edge_len()            
+        print(f"{'Avg. Edge Length:':<22}"      + str(round(avg_edge_len, 4)))
+
+        ## Perimeter
+        perimeter = interval.perimeter()            
+        print(f"{'Perimeter:':<22}"             + str(round(perimeter, 4)))
+
+        ## Apothem
+        print("-" * 60)
+        apothem = interval.lb_apothem(self.x_star)            
+        print(f"{'LB Apothem:':<22}"          + str(round(apothem, 4)))
+        apothem = interval.ub_apothem(self.x_star)            
+        print(f"{'UB Apothem:':<22}"          + str(round(apothem, 4)))
+        apothem = interval.apothem(self.x_star)            
+        print(f"{'Apothem:':<22}"             + str(round(apothem, 4)))
+
+        print("-" * 60)
         print(f"{'Timeout:':<22}"               + str(self.algo.is_timeout))
+        print(f"{'Its. Out:':<22}"              + str(self.algo.is_iterations_out))
         print("-" * 60)
         print(f"{'Verif. Timeouts:':<22}"       + str(self.isSAT.get_timeouts()))
         print(f"{'Verif. Time:':<22}"           + str(round(self.isSAT.get_total_time(), 2)) + " (secs)")
@@ -319,22 +358,48 @@ class Application:
     
 
     def print_simple_results(self):
-        min_edge_len = None
-        if isinstance(self.guarantee, csg.CyclicGuarantee):
-            interval = self.guarantee.get_interval()
-            interval.intersect(self.domain)
-            min_edge_len = interval.min_edge_length()
-        else:
-            min_edge_len = self.guarantee.min_edge_length()
+        # min_edge_len = None
+        # if isinstance(self.guarantee, csg.CyclicGuarantee):
+        #     interval = self.guarantee.get_interval()
+        #     interval.intersect(self.domain)
+        #     min_edge_len = interval.min_edge_length()
+        # else:
+        #     min_edge_len = self.guarantee.min_edge_length()
 
         simple_res =    str(self.algo.num_it)                       + " "   # Num. of Iterations
         simple_res +=   str(round(self.algo.total_time, 2))         + " "   # CPU time
         simple_res +=   str(self.guarantee.calc_complexity())       + " "   # Complexity
+        ## Minimum Edge Length
+        interval = self.guarantee.get_interval()
+        interval.intersect(self.domain)
+        min_edge_len = interval.min_edge_len() 
         simple_res +=   str(round(min_edge_len, 4))                 + " "   # Min. Edge Length
         simple_res +=   str(round(self.isSAT.get_total_time(), 2))  + " "   # Verif. Total Time
         simple_res +=   str(self.isSAT.get_num_calls())             + " "   # Verif. Num. of Calls
-        simple_res +=   str(int(self.algo.is_timeout))                      # Timeout
+        simple_res +=   str(int(self.algo.is_timeout))              + " "   # Timeout
+
+        ###############
+        # Quick Patch #
+        ###############
+        ## Minimum Edge Length
+        interval = self.guarantee.get_interval()
+        interval.intersect(self.domain)
+        ## Maximum Edge Length
+        diameter    = interval.diam()            
+        simple_res  += str(round(diameter, 4)) + " "
+
+        ## Average Edge Length
+        avg_edge_len    = interval.avg_edge_len()            
+        simple_res      += str(round(avg_edge_len, 4)) + " "
+
+        ## Perimeter
+        perimeter   = interval.perimeter()            
+        simple_res  += str(round(perimeter, 4)) + " "
         
+        ## Apothem
+        apothem     = interval.apothem(self.x_star)            
+        simple_res  += str(round(apothem, 4)) + " "
+
         print(simple_res)
 
 
@@ -362,9 +427,8 @@ class Application:
     
     def image_save_bounds(self, overwrite = False) -> None:
         """
-            #### Description:
-            Saving the images to `<output_prefix>_lb.png`
-            `<output_prefix>_ub.png`, *if the files do not exist*.
+        Saving the images to `<output_prefix>_lb.png`
+        `<output_prefix>_ub.png`, *if the files do not exist*.
         """
 
         assert self.done == True

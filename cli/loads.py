@@ -1,3 +1,6 @@
+## Date
+from datetime import datetime
+
 ## Typing
 import typing
 
@@ -54,6 +57,10 @@ def load_radius(argv: typing.List[str]) -> typing.Union[bool, None]:
         dom_ub = float(argv[argv.index(args.cli_args[args.optional][args.dom_ub]) + 1])
 
         return dom_ub - dom_lb
+    
+    ## quick fix 21/05/2026
+    elif args.cli_args[args.optional][args.rad] in argv:
+        return float(argv[argv.index(args.cli_args[args.optional][args.rad]) + 1])
 
     return None
 
@@ -140,8 +147,9 @@ def load_out_dir(argv: typing.List[str]) -> typing.Union[str, None]:
     path           = argv[argv.index(args.cli_args[args.required][args.x_star_path]) + 1]
     
     # tokenize the input path
-    basename       = path.split(".")[-2].split("/")[-1]      # the filename
-    path_header    = "/".join(path.split("/")[:-2])         # the path header
+    basename       = path.split(".")[-2].split("/")[-1]     # the filename
+    dataset_dir    = path.split(".")[-2].split("/")[-2]     # the dataset directory
+    path_header    = "/".join(path.split("/")[:-3])         # the path header
                                                             # until before the input directory
     
     # handle output subdir
@@ -158,10 +166,25 @@ def load_out_dir(argv: typing.List[str]) -> typing.Union[str, None]:
         # with the given subdir
         output_subdir = argv[argv.index(args.cli_args[args.optional][args.out_dir]) + 1]
 
+    date            = datetime.now()
+    date_str        = date.strftime("-%d-%m-%Y")
+    output_subdir   += date_str
+
     ## Construct the output path
-    output_dir = "/".join([path_header, "outputs", output_subdir])
+    output_dir = "/".join([
+        path_header,
+        "outputs",
+        dataset_dir,
+        output_subdir
+    ])
     os.makedirs(output_dir, exist_ok=True)
-    output_prefix = "/".join([path_header, "outputs", output_subdir, basename])
+    output_prefix = "/".join([
+        path_header,
+        "outputs",
+        dataset_dir,
+        output_subdir,
+        basename
+    ])
 
     return output_prefix
 
@@ -204,6 +227,7 @@ load = {
         args.dom_lb:      lambda argv: load_optional_float(argv, args.cli_args[args.optional][args.dom_lb]),
         args.dom_ub:      lambda argv: load_optional_float(argv, args.cli_args[args.optional][args.dom_ub]),
         args.timeout:     lambda argv: load_optional_int(argv, args.cli_args[args.optional][args.timeout]),
+        args.log_file:    lambda argv: load_optional_bool(argv, args.cli_args[args.optional][args.log_file]),
         
         # Interface
         args.no_out:      lambda argv: load_optional_bool(argv, args.cli_args[args.optional][args.no_out]),
