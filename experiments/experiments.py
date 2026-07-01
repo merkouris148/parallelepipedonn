@@ -149,6 +149,10 @@ class ResultsVector:
         self.verif_tot_time     = float(tokens[4])
         self.verif_num_calls    = int(tokens[5])
         self.timeout            = int(tokens[6])
+        self.diam               = float(tokens[7])
+        self.avg_edge_len       = float(tokens[8])
+        self.perimeter          = float(tokens[9])
+        self.apothem            = float(tokens[10])
 
 
 
@@ -257,8 +261,10 @@ class Experiments:
                 print(lowerbound_path)
                 print(self.bounds_dir)
 
+            input_header = self.input_directory
+            if input_header[-1] != "/": input_header += "/"
             arg_vec = ArgumentVector(
-                            self.input_directory + "/" + x_star_path_name,
+                            input_header + x_star_path_name,
                             self.predictions[i],
                             self.onnx_path,
                             self.method_pfx,
@@ -311,17 +317,41 @@ class Experiments:
         self.tot_time       = 0
         self.timeouts       = 0
 
-        # guarantee's complexity
+        # complexity
         self.min_comp       = math.inf
         self.avg_comp       = 0
         self.max_comp       = -math.inf
         self.var_comp       = 0
 
-        # guarantees min edge length
+        # min edge length
         self.min_min_edge_len    = math.inf
         self.avg_min_edge_len    = 0
         self.max_min_edge_len    = -math.inf
         self.var_min_edge_len    = 0
+
+        # diameter (max. edge len.)
+        self.min_diam    = math.inf
+        self.avg_diam    = 0
+        self.max_diam    = -math.inf
+        self.var_diam    = 0
+
+        # avg. edge len.
+        self.min_avg_edge_len   = math.inf
+        self.avg_avg_edge_len   = 0
+        self.max_avg_edge_len   = -math.inf
+        self.var_avg_edge_len   = 0
+
+        # perimeter
+        self.min_perimeter    = math.inf
+        self.avg_perimeter    = 0
+        self.max_perimeter    = -math.inf
+        self.var_perimeter    = 0
+
+        # apothem
+        self.min_apothem    = math.inf
+        self.avg_apothem    = 0
+        self.max_apothem    = -math.inf
+        self.var_apothem    = 0
 
         # verif time
         self.min_verif_time       = math.inf
@@ -433,70 +463,185 @@ class Experiments:
     
 
     ## Statistics
-    def calculate_statistics(self):
-        #assert self.check_exit_codes()
-
+    # num iterations
+    def _calculate_statistics_num_it(self):
         for res in self.results:
-            # num iterations
             self.avg_num_it         += res.num_it
             self.max_num_it         = max(res.num_it, self.max_num_it)
             self.min_num_it         = min(res.num_it, self.min_num_it)
+        
+        # average
+        self.avg_num_it             /= len(self.results)
 
+        # variance
+        for res in self.results:
+            self.var_num_it         += (self.avg_num_it - res.num_it)**2
+        
+        self.var_num_it             /= len(self.results)
+    
+
+    def _calculate_statistics_time(self):
+        for res in self.results:
             # time
             self.tot_time   += res.time
             self.max_time   = max(res.time, self.max_time)
             self.min_time   = min(res.time, self.min_time)
             self.timeouts   += res.timeout
 
+        self.avg_time       = self.tot_time / len(self.results)
+
+        for res in self.results:
+            self.var_time   += (self.avg_time - res.time)**2
+
+        self.var_time       /= len(self.results)
+
+
+    def _calculate_statistics_comp(self):
+        for res in self.results:
             # explanation's complexity
             self.avg_comp   += res.comp
             self.max_comp   = max(res.comp, self.max_comp)
             self.min_comp   = min(res.comp, self.min_comp)
+        
+        self.avg_comp       /= len(self.results)
 
+        for res in self.results:
+            self.var_comp   += (self.avg_comp - res.comp)**2
+        
+        self.var_comp       /= len(self.results)
+        
+
+    def _calculate_statistics_min_edge(self):
+        for res in self.results:
             # explanation's max inf radius
             self.avg_min_edge_len   += res.min_edge_len
             self.max_min_edge_len   = max(res.min_edge_len, self.max_min_edge_len)
             self.min_min_edge_len   = min(res.min_edge_len, self.min_min_edge_len)
-
-            # verif time
-            self.tot_verif_time       += res.verif_tot_time
-            self.max_verif_time       = max(res.verif_tot_time, self.max_verif_time)
-            self.min_verif_time       = min(res.verif_tot_time, self.min_verif_time)
-
-            # verif num calls
-            self.tot_verif_calls      += res.verif_num_calls
-            self.max_verif_calls      = max(res.verif_num_calls, self.max_verif_calls)
-            self.min_verif_calls      = min(res.verif_num_calls, self.min_verif_calls)
-            
         
-        ## Scale avgs
-        self.avg_num_it         /= len(self.results)
-        self.avg_time           = self.tot_time / len(self.results)
-        self.avg_comp           /= len(self.results)
-        self.avg_min_edge_len   /= len(self.results)
+        self.avg_min_edge_len       /= len(self.results)
+
+        for res in self.results:
+            self.var_min_edge_len   += (self.avg_min_edge_len - res.min_edge_len)**2
+        
+        self.var_min_edge_len   /= len(self.results)
+        
+
+    def _calculate_statistics_verif_time(self):
+        for res in self.results:
+            # verif time
+            self.tot_verif_time += res.verif_tot_time
+            self.max_verif_time = max(res.verif_tot_time, self.max_verif_time)
+            self.min_verif_time = min(res.verif_tot_time, self.min_verif_time)
+        
         self.avg_verif_time     = self.tot_verif_time / len(self.results)
-        self.avg_verif_calls    = self.tot_verif_calls / len(self.results)
+
+        for res in self.results:
+            self.var_verif_time += (self.avg_verif_time - res.verif_tot_time)**2
+        
+        self.var_verif_time     /= len(self.results)
+
+
+    def _calculate_statistics_verif_calls(self):
+        for res in self.results:
+            # verif num calls
+            self.tot_verif_calls    += res.verif_num_calls
+            self.max_verif_calls    = max(res.verif_num_calls, self.max_verif_calls)
+            self.min_verif_calls    = min(res.verif_num_calls, self.min_verif_calls)
+
+        ## Scale avgs
+        self.avg_verif_calls        = self.tot_verif_calls / len(self.results)
 
         ## Calculate variance
         for res in self.results:
-            self.var_num_it         += (self.avg_num_it - res.num_it)**2
-            self.var_time           += (self.avg_time - res.time)**2
-            self.var_comp           += (self.avg_comp - res.comp)**2
-            self.var_min_edge_len   += (self.avg_min_edge_len - res.min_edge_len)**2
-            self.var_verif_time     += (self.avg_verif_time - res.verif_tot_time)**2
             self.var_verif_calls    += (self.avg_verif_calls - res.verif_num_calls)**2
         
         ## Scale variances
-        self.var_num_it         /= len(self.results)
-        self.var_time           /= len(self.results)
-        self.var_comp           /= len(self.results)
-        self.var_min_edge_len   /= len(self.results)
-        self.var_verif_time     /= len(self.results)
         self.var_verif_calls    /= len(self.results)
+    
 
+    def _calculate_statistics_verif_overall(self):
         ## Overal Verif Statistics
         self.verif_time_call = self.tot_verif_time / self.tot_verif_calls
         self.verif_percent   = self.tot_verif_time / self.tot_time
+
+
+    def _calculate_statistics_diam(self):
+        for res in self.results:
+            # explanation's max inf radius
+            self.avg_diam   += res.diam
+            self.max_diam   = max(res.diam, self.max_diam)
+            self.min_diam   = min(res.diam, self.min_diam)
+        
+        self.avg_diam       /= len(self.results)
+
+        for res in self.results:
+            self.var_diam   += (self.avg_diam - res.diam)**2
+        
+        self.var_diam       /= len(self.results)
+
+
+    def _calculate_statistics_avg_len(self):
+        for res in self.results:
+            # explanation's max inf radius
+            self.avg_avg_edge_len   += res.avg_edge_len
+            self.max_avg_edge_len   = max(res.avg_edge_len, self.max_avg_edge_len)
+            self.min_avg_edge_len   = min(res.avg_edge_len, self.min_avg_edge_len)
+        
+        self.avg_avg_edge_len       /= len(self.results)
+
+        for res in self.results:
+            self.var_avg_edge_len   += (self.avg_avg_edge_len - res.avg_edge_len)**2
+        
+        self.var_avg_edge_len       /= len(self.results)
+    
+
+    def _calculate_statistics_perimeter(self):
+        for res in self.results:
+            # explanation's max inf radius
+            self.avg_perimeter  += res.perimeter
+            self.max_perimeter  = max(res.perimeter, self.max_perimeter)
+            self.min_perimeter  = min(res.perimeter, self.min_perimeter)
+        
+        self.avg_perimeter      /= len(self.results)
+
+        for res in self.results:
+            self.var_perimeter  += (self.avg_perimeter - res.perimeter)**2
+        
+        self.var_perimeter      /= len(self.results)
+
+
+    def _calculate_statistics_apothem(self):
+        for res in self.results:
+            # explanation's max inf radius
+            self.avg_apothem   += res.apothem
+            self.max_apothem   = max(res.apothem, self.max_apothem)
+            self.min_apothem   = min(res.apothem, self.min_apothem)
+        
+        self.avg_apothem       /= len(self.results)
+
+        for res in self.results:
+            self.var_apothem   += (self.avg_apothem - res.apothem)**2
+        
+        self.var_apothem        /= len(self.results)
+
+
+    def calculate_statistics(self):
+        #assert self.check_exit_codes()
+
+        self._calculate_statistics_num_it()
+        self._calculate_statistics_time()
+        self._calculate_statistics_comp()
+        self._calculate_statistics_min_edge()
+        self._calculate_statistics_verif_time()
+        self._calculate_statistics_verif_calls()
+        self._calculate_statistics_diam()
+        self._calculate_statistics_avg_len()
+        self._calculate_statistics_perimeter()
+        self._calculate_statistics_apothem()
+
+        ## Overal Verif Statistics
+        self._calculate_statistics_verif_overall()
+        
 
     
     # I/O
@@ -524,19 +669,47 @@ class Experiments:
                     f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_time))     + "\n" +\
                     f"{'Timeouts:':<26}"            + str(self.timeouts)                + "\n" +\
                     "-" * 60                                                            + "\n" +\
-                    "# Guarantee's Description Complexity:"                             + "\n" +\
+                    "# Description Complexity:"                             + "\n" +\
                     f"{'Min.:':<26}"                + str(self.min_comp)                + "\n" +\
                     f"{'Avg.:':<26}"                + str(self.avg_comp)                + "\n" +\
                     f"{'Max.:':<26}"                + str(self.max_comp)                + "\n" +\
                     f"{'Var.:':<26}"                + str(self.var_comp)                + "\n" +\
                     f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_comp))     + "\n" +\
                     "-" * 60                                                            + "\n" +\
-                    "# Guarantee's Minimum Edge Length:"                                + "\n" +\
+                    "# Minimum Edge Length:"                                + "\n" +\
                     f"{'Min.:':<26}"                + str(self.min_min_edge_len)        + "\n" +\
                     f"{'Avg.:':<26}"                + str(self.avg_min_edge_len)        + "\n" +\
                     f"{'Max.:':<26}"                + str(self.max_min_edge_len)        + "\n" +\
                     f"{'Var.:':<26}"                + str(self.var_min_edge_len)        + "\n" +\
                     f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_min_edge_len)) + "\n" +\
+                    "-" * 60                                                            + "\n" +\
+                    "# Diameter:"                                                       + "\n" +\
+                    f"{'Min.:':<26}"                + str(self.min_diam)                + "\n" +\
+                    f"{'Avg.:':<26}"                + str(self.avg_diam)                + "\n" +\
+                    f"{'Max.:':<26}"                + str(self.max_diam)                + "\n" +\
+                    f"{'Var.:':<26}"                + str(self.var_diam)                + "\n" +\
+                    f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_diam))     + "\n" +\
+                    "-" * 60                                                            + "\n" +\
+                    "# Avg. Edge Length:"                                               + "\n" +\
+                    f"{'Min.:':<26}"                + str(self.min_avg_edge_len)        + "\n" +\
+                    f"{'Avg.:':<26}"                + str(self.avg_avg_edge_len)        + "\n" +\
+                    f"{'Max.:':<26}"                + str(self.max_avg_edge_len)        + "\n" +\
+                    f"{'Var.:':<26}"                + str(self.var_avg_edge_len)        + "\n" +\
+                    f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_avg_edge_len)) + "\n" +\
+                    "-" * 60                                                            + "\n" +\
+                    "# Perimeter:"                                                      + "\n" +\
+                    f"{'Min.:':<26}"                + str(self.min_perimeter)           + "\n" +\
+                    f"{'Avg.:':<26}"                + str(self.avg_perimeter)           + "\n" +\
+                    f"{'Max.:':<26}"                + str(self.max_perimeter)           + "\n" +\
+                    f"{'Var.:':<26}"                + str(self.var_perimeter)           + "\n" +\
+                    f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_perimeter)) + "\n" +\
+                    "-" * 60                                                            + "\n" +\
+                    "# Apothem:"                                                        + "\n" +\
+                    f"{'Min.:':<26}"                + str(self.min_apothem)             + "\n" +\
+                    f"{'Avg.:':<26}"                + str(self.avg_apothem)             + "\n" +\
+                    f"{'Max.:':<26}"                + str(self.max_apothem)             + "\n" +\
+                    f"{'Var.:':<26}"                + str(self.var_apothem)             + "\n" +\
+                    f"{'Std Dev.:':<26}"            + str(math.sqrt(self.var_apothem))  + "\n" +\
                     "-" * 60                                                            + "\n" +\
                     "# Verification Oracle's Time:"                                     + "\n" +\
                     f"{'Min.:':<26}"                + str(self.min_verif_time)          + "\n" +\
@@ -554,7 +727,8 @@ class Experiments:
                     "-" * 60                                                            + "\n" +\
                     "# Verification Overall Statistics"                                 + "\n" +\
                     f"{'Avg. Verif. Time/Call:':<26}"      + str(self.verif_time_call)  + "\n" +\
-                    f"{'Percent. Verif_t/Tot_t:':<26}"     + str(self.verif_percent)
+                    f"{'Percent. Verif_t/Tot_t:':<26}"     + str(self.verif_percent)    + "\n" +\
+                    "-" * 60
 
 
 
@@ -563,11 +737,22 @@ class Experiments:
     
     def make_output_dir_path(self):
         tokens      = self.input_directory.split("/")
-        path_header = "/".join(tokens[:-1])
+        #print(tokens)
+        if tokens[-1] == "":
+            path_header = "/".join(tokens[:-3])
+            dataset     = tokens[-2]
+        else:
+            path_header = "/".join(tokens[:-2])
+            dataset     = tokens[-1]
         
+        date        = datetime.now()
+        date_str    = date.strftime("-%d-%m-%Y")
+
         self.output_dir  =  path_header         + "/" +\
                             "outputs"           + "/" +\
-                            self.method_pfx
+                            dataset             + "/" +\
+                            self.method_pfx     +\
+                            date_str
         
         ## hope this works
         os.makedirs(self.output_dir, exist_ok=True)
