@@ -2,7 +2,7 @@
 # Importing parent directory class
 # see: https://www.geeksforgeeks.org/python-import-from-parent-directory/
 import sys
-sys.path.append('..')
+# sys.path.append('..')
 import geometry.interval as interval
 import geometry.circle as circle
 from geometry.norms import inf_norm
@@ -30,18 +30,18 @@ class CyclicGuarantee(circle.InfCircle):
     # Constructor
     def __init__(
                     self,
-                    x_star,                 # the input point
-                    c_star,                 # the predicted class of x_star
-                    distance_restriction,   # the maximum distance of the guarantee's
+                    x_star: np.ndarray,                 # the input point
+                    c_star: int,                 # the predicted class of x_star
+                    distance_restriction: float,   # the maximum distance of the guarantee's
                                             # radius
-                    delta,                  # the step of the expand/constain 
+                    delta: float,                  # the step of the expand/constain 
                                             # operations
-                    current_radius,         # the initial radius of the guarantee,
+                    current_radius: float,         # the initial radius of the guarantee,
                                             #   * cr = dr, for the top guarantee,
                                             #   * cr = 0, for the bottom guarantee
-                    domain                  # the input domain IF, is given as
+                    domain: interval.Interval                  # the input domain IF, is given as
                                             # a geometry.Interval instance
-                ):
+                ) -> None:
         
         ## Initialize super-class
         super().__init__(x_star, current_radius)
@@ -56,7 +56,7 @@ class CyclicGuarantee(circle.InfCircle):
         self.domain                 = domain
 
         self.pivot                  = interval.Interval(
-                                        np.array([[0]]),
+                                        np.array([[0.0]]),
                                         np.array([[self.distance_restriction]])
                                     )
     
@@ -82,7 +82,7 @@ class CyclicGuarantee(circle.InfCircle):
     # Let l = \ell_\infty(x* - x^c) then r' = l - \delta is
     # the radius of the new guarantee.
     ###########################################################
-    def constrain(self, counterexample):
+    def constrain(self, counterexample) -> bool:
         ## New radius
         val = inf_norm(counterexample - self.center)
         if val - self.delta > 0:
@@ -102,7 +102,7 @@ class CyclicGuarantee(circle.InfCircle):
     # guarantee, i.e. by expandin the guarantee may include a
     # counter example.
     ###########################################################
-    def expand(self):
+    def expand(self) -> bool:
         if self.get_radius() + self.delta < self.distance_restriction:
             self.set_radius(self.get_radius() + self.delta)
             return True
@@ -123,7 +123,7 @@ class CyclicGuarantee(circle.InfCircle):
     # Postcondition:
     #   * r' = pivot.lb + (pivot.ub - pivot.lb)/2
     ###########################################################
-    def expand_dichotomic(self):
+    def expand_dichotomic(self) -> bool:
         new_radius = self.pivot.lb[0][0] + (self.pivot.ub[0][0] - self.pivot.lb[0][0])/2
 
         if self.get_radius() + self.delta < self.distance_restriction:
@@ -152,9 +152,9 @@ class CyclicGuarantee(circle.InfCircle):
     # Hence, the values in [pivot.lb, r] are unecessary
     # restrictive. Therefore we raise the pivot.lb to r.
     ###########################################################
-    def up_pivot(self):
+    def up_pivot(self) -> bool:
         tmp = self.pivot.lb
-        self.pivot.lb = np.array([[self.radius]])
+        self.pivot.lb = np.array([[self.radius]])   # type: ignore[has-type]
 
         if not self.pivot.empty():
             return True
@@ -182,9 +182,9 @@ class CyclicGuarantee(circle.InfCircle):
     # x^c \in [x* - (pivot.ub)1, x* + (pivot.ub)1]. Thus, we
     # need to lower the pivot.ub.
     ###########################################################
-    def down_pivot(self):
+    def down_pivot(self) -> bool:
         tmp = self.pivot.ub
-        self.pivot.ub = np.array([[self.radius]])
+        self.pivot.ub = np.array([[self.radius]])   # type: ignore[has-type]
 
         #if self.pivot.inequalities_consistency():
         if not self.pivot.empty():
@@ -199,8 +199,8 @@ class CyclicGuarantee(circle.InfCircle):
     # --------------------------------------------------------
     # pivot.ub - pivot.lb >= \delta
     ###########################################################
-    def dichotomic_invariant(self):
-        return (self.pivot.ub[0][0] - self.pivot.lb[0][0]) >= self.delta
+    def dichotomic_invariant(self) -> bool:
+        return bool((self.pivot.ub[0][0] - self.pivot.lb[0][0]) >= self.delta)
 
 
     ###########################################################
@@ -210,8 +210,8 @@ class CyclicGuarantee(circle.InfCircle):
     # is ALWAYS sound. Thus, we assign,
     #   r = pivot.lb
     ###########################################################
-    def make_sound(self):
-        self.radius = self.pivot.lb.copy()
+    def make_sound(self) -> None:
+        self.radius = float(self.pivot.lb[0][0])
     
     ###########################################################
     # CyclicGuarantee.make_sound()
@@ -221,7 +221,7 @@ class CyclicGuarantee(circle.InfCircle):
     #   r = pivot.lb
     ###########################################################
     def make_complete(self):
-        self.radius = self.pivot.ub.copy()
+        self.radius = float(self.pivot.ub[0][0])
 
     ###########################################################
     # CyclicGuarantee.get_interval()
@@ -230,7 +230,7 @@ class CyclicGuarantee(circle.InfCircle):
     # input domain of the neural network. We return the
     # intersection, [x* - r1, x* + r1] \cap IF.
     ###########################################################
-    def get_interval(self):
+    def get_interval(self) -> interval.Interval:
         inf_circle = super().get_interval()
         inf_circle.intersect(self.domain)
 
@@ -240,14 +240,14 @@ class CyclicGuarantee(circle.InfCircle):
 
     ## Metrics
 
-    def calc_complexity(self):
+    def calc_complexity(self) -> np.bool_:
         inf_circle = super().get_interval()
         inf_circle.intersect(self.domain)
 
         return np.sum(inf_circle.lb < self.center) + np.sum(inf_circle.ub > self.center)
 
 
-    def calc_max_inf_radius(self):
+    def calc_max_inf_radius(self) -> float:
         inf_circle = super().get_interval()
         inf_circle.intersect(self.domain)
 
@@ -262,7 +262,7 @@ class CyclicGuarantee(circle.InfCircle):
 #   current_radius = distance_restriction
 ###########################################################
 class TopCyclicGuarantee(CyclicGuarantee):
-    def __init__(self, x_star, c_star, distance_restriction, delta, domain):
+    def __init__(self, x_star:np.ndarray, c_star:int, distance_restriction:float, delta:float, domain:interval.Interval):
         super().__init__(
                             x_star,
                             c_star,
@@ -283,7 +283,7 @@ class TopCyclicGuarantee(CyclicGuarantee):
 #   current_radius = 0
 ###########################################################
 class BottomCyclicGuarantee(CyclicGuarantee):
-    def __init__(self, x_star, c_star, distance_restriction, delta, domain):
+    def __init__(self, x_star:np.ndarray, c_star:int, distance_restriction:float, delta:float, domain:interval.Interval):
         super().__init__(
                             x_star,
                             c_star,

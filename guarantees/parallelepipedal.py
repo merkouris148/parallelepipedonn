@@ -15,19 +15,21 @@ import numpy as np
 
 class ParallelepipedalGuarantee(interval.Interval):
     """
-        #### Description:
-        A class encoding a stability guarantee. Essentially
-        a stability guarantee is an *interval* of the form
-        `[lb, ub]`, where `lb, ub` are *vectors* of the
-        `domain` input space.
+    **Description:**
 
-        #### Guarantee Refinement Operations:
-        * `constrain(x^c)`: Excludes the counterexample x^c from the guarantee.
-        * `expand()`: Expands the guarantee (every coordinate of lb, ub) by delta.
-        * `expand_ub(i, j)`: Expand by delta only the (i,j)-th coordinate of ub.
-        * `expand_lb(i, j)`: Expand by delta only the (i,j)-th coordinate of lb.
-        * `revert_expand_ub(i, j)`: Reduces by delta the (i, j)-th coordinate of ub.
-        * `revert_expand_lb(i, j)`: Reduces by delta the (i, j)-th coordinate of lb.
+    A class encoding a stability guarantee. Essentially
+    a stability guarantee is an *interval* of the form
+    ``[lb, ub]``, where `lb, ub` are *vectors* of the
+    ``domain`` input space.
+
+    **Guarantee Refinement Operations:**
+
+    * ``constrain(x^c)``: Excludes the counterexample x^c from the guarantee.
+    * ``expand()``: Expands the guarantee (every coordinate of lb, ub) by delta.
+    * ``expand_ub(i, j)``: Expand by delta only the (i,j)-th coordinate of ub.
+    * ``expand_lb(i, j)``: Expand by delta only the (i,j)-th coordinate of lb.
+    * ``revert_expand_ub(i, j)``: Reduces by delta the (i, j)-th coordinate of ub.
+    * ``revert_expand_lb(i, j)``: Reduces by delta the (i, j)-th coordinate of lb.
     """
 
     ###############
@@ -42,7 +44,7 @@ class ParallelepipedalGuarantee(interval.Interval):
             domain: interval.Interval # an interval
         ) -> None:
         ## Initializing super-class with the whole IR^d
-        interval.Interval.__init__(self, -np.inf * np.ones(x_star.shape), np.inf * np.ones(x_star.shape))
+        super().__init__(-np.inf * np.ones(x_star.shape), np.inf * np.ones(x_star.shape))
         assert x_star in domain
 
         ## Initialization
@@ -50,9 +52,6 @@ class ParallelepipedalGuarantee(interval.Interval):
         self.x_star     = x_star
         self.c_star     = c_star
         self.delta      = delta
-        # self.row_dim    = x_star.shape[0]
-        # self.column_dim = x_star.shape[1]
-        # self.dim        = self.row_dim * self.column_dim
         self.shape      = x_star.shape
 
         ## ONLY for dichotomic search
@@ -89,13 +88,14 @@ class ParallelepipedalGuarantee(interval.Interval):
             new_ub: typing.Union[np.ndarray, None]
         ) -> typing.Tuple[bool, bool]:
         """
-            #### Description:
-            Setting the bounds of a *parallelepipedal* guarantee.
+        **Description:**
+        
+        Setting the bounds of a *parallelepipedal* guarantee.
         """
 
         lb_set = False
         if new_lb is not None:
-            assert new_lb.shape == (self.row_dim, self.column_dim)
+            assert new_lb.shape == self.shape
             assert (new_lb <= self.x_star).all()
             assert (self.domain.lb <= new_lb).all()
 
@@ -105,7 +105,7 @@ class ParallelepipedalGuarantee(interval.Interval):
 
         ub_set = False
         if new_ub is not None:
-            assert new_ub.shape == (self.row_dim, self.column_dim)
+            assert new_ub.shape == self.shape
             assert (self.x_star <= new_ub).all()
             assert (new_ub <= self.domain.ub).all()
 
@@ -123,14 +123,17 @@ class ParallelepipedalGuarantee(interval.Interval):
     ##################################
     
     # Select inequality to update
-    def select_inequality(self, counter_example: np.ndarray) -> typing.Tuple[int, bool]:
+    def select_inequality(
+            self,
+            counter_example: np.ndarray
+        ) -> typing.Tuple[typing.Tuple[int, ...], bool]:
         ## upper difference
         diff        = counter_example - self.x_star
         abs_diff    = np.abs(diff)
         ind         = np.unravel_index(abs_diff.argmax(), abs_diff.shape)
 
         ## Choose to update lower or upper bounds
-        update_ub = diff[ind] > 0
+        update_ub = bool(diff[ind] > 0)
 
         ## return values
         return ind, update_ub
@@ -168,6 +171,7 @@ class ParallelepipedalGuarantee(interval.Interval):
         assert not (witness in self)
         ## Sanity check
         old_potential = self.avg_edge_len()
+        #print(old_potential)
 
 
         witness_interval = interval.Interval(
@@ -181,12 +185,15 @@ class ParallelepipedalGuarantee(interval.Interval):
         witness_interval.intersect(self.domain)
         self.join(witness_interval)
         
+        
         ## Sanity check
         new_potential = self.avg_edge_len()
+
         assert new_potential - old_potential > 0
         
         ## Constrain successful
-        return self <= self.domain
+        self.intersect(self.domain)
+        return True
     
     ###################################
     # Operations for Bottom Up Search #
@@ -194,16 +201,16 @@ class ParallelepipedalGuarantee(interval.Interval):
     
     def expand(self) -> bool:
         ## Check that the explanation does not exceed the domain
-        if (self.ub + self.delta * np.ones([self.row_dim, self.column_dim]) > self.domain.ub).any() or\
-            (self.lb - self.delta * np.ones([self.row_dim, self.column_dim]) < self.domain.lb).any():
+        if (self.ub + self.delta * np.ones(self.shape) > self.domain.ub).any() or\
+            (self.lb - self.delta * np.ones(self.shape) < self.domain.lb).any():
             
             return False
 
         ## compute expantion
-        self.ub += self.delta * np.ones([self.row_dim, self.column_dim])
-        self.lb -= self.delta * np.ones([self.row_dim, self.column_dim])
+        self.ub += self.delta * np.ones(self.shape)
+        self.lb -= self.delta * np.ones(self.shape)
 
-        return self.inequalities_consistency()
+        return not self.empty()
 
     
     #######################################
@@ -211,27 +218,27 @@ class ParallelepipedalGuarantee(interval.Interval):
     #######################################
     
     # expand a feature by delta
-    def expand_ub(self, ind: typing.Tuple[int]):
+    def expand_ub(self, ind: typing.Tuple[int, ...]):
         ## Check that the explanasion does not exceed the domain
         if self.ub[ind] + self.delta > self.domain.ub[ind]: return False
 
         ## compute expansion
-        self.update_ub(ind, self.ub[ind] +  self.delta)
+        self.ub[ind] += self.delta
         return True
 
-    def expand_lb(self, ind: typing.Tuple[int]):
+    def expand_lb(self, ind: typing.Tuple[int, ...]):
         ## Check that the explanasion does not exceed the domain
         if self.lb[ind] -  self.delta < self.domain.lb[ind]: return False
 
         ## compute expansion
-        self.update_lb(ind, self.lb[ind] -  self.delta)
+        self.lb[ind] += self.delta
         return True
     
     # revert a previous expansion
-    def revert_expand_ub(self, ind: typing.Tuple[int]):
+    def revert_expand_ub(self, ind: typing.Tuple[int, ...]):
         self.ub[ind] -= self.delta
 
-    def revert_expand_lb(self, ind: typing.Tuple[int]):
+    def revert_expand_lb(self, ind: typing.Tuple[int, ...]):
         self.lb[ind] += self.delta
 
 
@@ -240,23 +247,28 @@ class ParallelepipedalGuarantee(interval.Interval):
     # Operations for Bottom Up Dichotomic DFS #
     ###########################################
 
-    def expand_dichotomic_ub(self, ind: typing.Tuple[int]) -> bool:
+    def expand_dichotomic_ub(self, ind: typing.Tuple[int, ...]) -> bool:
         """ 
-            #### Description:
-            The expand `ub` operation used in Bottom-Up Dichotomic DFS.
+        **Description:**
 
-            #### Percondition:
-            `ub` in `[high_pivot.lb, high_pivot.ub]`, with either
-            * `ub = high_pivot.lb`, or
-            * `ub = high_pivot.ub`
-    
-            #### Postcondition:
-            * `ub = high_pivot.lb + (high_pivot.ub - high_pivot.lb)/2`
-            * the precondition still holds.
+        The expand ``ub`` operation used in Bottom-Up Dichotomic DFS.
 
-            #### Output:
-            * `False` is returned iff the expnasion does not exceed the domain.
-            Namely, iff `new_ub_ij > dom_ub_ij`
+        **Percondition:**
+
+        ``ub`` in ``[high_pivot.lb, high_pivot.ub]``, with either
+
+        * ``ub = high_pivot.lb``, or
+        * ``ub = high_pivot.ub``
+
+        **Postcondition:**
+        
+        * ``ub = high_pivot.lb + (high_pivot.ub - high_pivot.lb)/2``
+        * the precondition still holds.
+
+        **Output:**
+
+        ``False`` is returned iff the expnasion does not exceed the domain.
+        Namely, iff ``new_ub_ij > dom_ub_ij``.
         """
 
         new_ub_ij = self.high_pivot.lb[ind] + (self.high_pivot.ub[ind] - self.high_pivot.lb[ind]) / 2
@@ -266,23 +278,28 @@ class ParallelepipedalGuarantee(interval.Interval):
         return True
 
 
-    def expand_dichotomic_lb(self, ind: typing.Tuple[int]) -> bool:
+    def expand_dichotomic_lb(self, ind: typing.Tuple[int, ...]) -> bool:
         """
-            #### Description:
-            The expand `lb` operation used in Bottom-Up Dichotomic DFS.
+        **Description:**
 
-            #### Percondition:
-            `lb` in `[low_pivot.lb, low_pivot.ub]`, with either:
-            * `lb = low_pivot.lb`, or
-            * `lb = low_pivot.ub`
-    
-            #### Postcondition:
-            * `lb = low_pivot.lb + (low_pivot.ub - low_pivot.lb)/2`
-            * the precondition still holds.
+        The expand ``lb`` operation used in Bottom-Up Dichotomic DFS.
 
-            #### Output:
-            * `False` is returned iff the expnasion does not exceed the domain.
-            Namely, iff `new_lb_ij < dom_lb_ij`
+        **Percondition:**
+        
+        ``lb`` in ``[low_pivot.lb, low_pivot.ub]``, with either:
+
+        * ``lb = low_pivot.lb``, or
+        * ``lb = low_pivot.ub``
+
+        **Postcondition:**
+
+        * ``lb = low_pivot.lb + (low_pivot.ub - low_pivot.lb)/2``
+        * the precondition still holds.
+
+        **Output:**
+
+        `False` is returned iff the expnasion does not exceed the domain.
+        Namely, iff `new_lb_ij < dom_lb_ij`
         """
 
         new_lb_ij = self.low_pivot.lb[ind] + (self.low_pivot.ub[ind] - self.low_pivot.lb[ind]) / 2
@@ -294,24 +311,28 @@ class ParallelepipedalGuarantee(interval.Interval):
 
     ## Refine high_pivot
 
-    def down_high_pivot(self, ind: typing.Tuple[int]) -> bool:
+    def down_high_pivot(self, ind: typing.Tuple[int, ...]) -> bool:
         """
-            #### Description:
-            Refinement of the `high_pivot`, used in Bottom-Up Dichtomic DFS.
+        **Description:**
+        
+        Refinement of the `high_pivot`, used in Bottom-Up Dichtomic DFS.
 
-            #### Percondition:
-            `ub` in `[high_pivot.lb, high_pivot.ub]`, with
-            * `ub = high_pivot.lb + (high_pivot.ub - high_pivot.lb)/2`
-    
-            #### Postcondition:
-            * `high_pivot.ub = ub`
-    
-            #### Notes:
-            We use this operation when the current guarantee is NOT
-            sound. If `[lb, ub]` the current guarantee and there is a
-            counterexample `x^c` in `[lb, ub]`, then there will also
-            be a counterexample `x^c` in `[lb, high_pivot.ub]`. Thus, we
-            need to lower the `high_pivot.ub`.
+        **Percondition:**
+        
+        ``ub`` in ``[high_pivot.lb, high_pivot.ub]``, with
+        ``ub = high_pivot.lb + (high_pivot.ub - high_pivot.lb)/2``
+
+        **Postcondition:**
+        
+        ``high_pivot.ub = ub``
+
+        **Notes:**
+        
+        We use this operation when the current guarantee is NOT
+        sound. If ``[lb, ub]`` the current guarantee and there is a
+        counterexample ``x^c`` in ``[lb, ub]``, then there will also
+        be a counterexample ``x^c`` in ``[lb, high_pivot.ub]``. Thus, we
+        need to lower the ``high_pivot.ub``.
         """
 
         tmp = self.high_pivot.ub[ind]
@@ -343,7 +364,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # in [high_pivot.lb, ub] are unecessary restrictive.
     # Therefore we raise the high_pivot.lb to ub.
     ###########################################################
-    def up_high_pivot(self, ind: typing.Tuple[int]):
+    def up_high_pivot(self, ind: typing.Tuple[int, ...]) -> bool:
         #self.high_pivot.update_lb((i,j), self.ub[i][j])
         tmp = self.high_pivot.lb[ind]
         self.high_pivot.lb[ind] = self.ub[ind]
@@ -376,7 +397,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # in [lb, low_pivot.ub] are unecessary restrictive.
     # Therefore we lower the low_pivot.ub to lb.
     ###########################################################
-    def down_low_pivot(self, ind: typing.Tuple[int]):
+    def down_low_pivot(self, ind: typing.Tuple[int, ...]) -> bool:
         #self.low_pivot.update_ub((i, j), self.lb[i][j])
         tmp = self.low_pivot.ub[ind]
         self.low_pivot.ub[ind] = self.lb[ind]
@@ -405,7 +426,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # x^c in [lb, ub]. Hence there is a counterexample in
     # [low_pivot.lb, ub]. Therefore, we raise low_pivot.lb to lb.
     ###########################################################
-    def up_low_pivot(self, ind: typing.Tuple[int]):
+    def up_low_pivot(self, ind: typing.Tuple[int, ...]) -> bool:
         #self.low_pivot.update_lb((i, j), self.lb[i][j])
         tmp = self.low_pivot.lb[ind]
         self.low_pivot.lb[ind] = self.lb[ind]
@@ -425,7 +446,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # --------------------------------------------------------
     # high_pivot.ub - high_pivot.lb >= \delta
     ###########################################################
-    def high_dichotomic_invariant(self, ind: typing.Tuple[int]):
+    def high_dichotomic_invariant(self, ind: typing.Tuple[int, ...]):
         return (self.high_pivot.ub[ind] - self.high_pivot.lb[ind]) >= self.delta
 
     ###########################################################
@@ -433,7 +454,7 @@ class ParallelepipedalGuarantee(interval.Interval):
     # --------------------------------------------------------
     # low_pivot.ub - low_pivot.lb >= \delta
     ###########################################################
-    def low_dichotomic_invariant(self, ind: typing.Tuple[int]):
+    def low_dichotomic_invariant(self, ind: typing.Tuple[int, ...]):
         return (self.low_pivot.ub[ind] - self.low_pivot.lb[ind]) >= self.delta
 
     ## Revert [lb, ub] to the last "safe" position
@@ -463,29 +484,52 @@ class ParallelepipedalGuarantee(interval.Interval):
     # Metrics #
     ###########
     
-    def calc_complexity(self):
-        return np.sum(self.lb < self.x_star) + np.sum(self.ub > self.x_star)
+    def calc_complexity(self) -> int:
+        return int(np.sum(self.lb < self.x_star) + np.sum(self.ub > self.x_star))
+    
+    def lb_apothem(self) -> float:              # type: ignore[override]
+        #return super().lb_apothem(self.x_star)
+
+        lb_delta    = self.x_star - self.lb
+        dom_delta   = self.x_star - self.domain.lb
+
+        if not (lb_delta < dom_delta).any():    return np.inf
+        else:                                   return round(min(lb_delta[(lb_delta < dom_delta)]), 4)
+
+
+    def ub_apothem(self) -> float:              # type: ignore[override]
+        #return super().ub_apothem(self.x_star)
+
+        ub_delta    = self.ub - self.x_star
+        dom_delta   = self.domain.ub - self.x_star
+
+        if not (ub_delta < dom_delta).any():    return np.inf
+        else:                                   return round(min(ub_delta[(ub_delta < dom_delta)]), 4)
+
+
+    def apothem(self) -> float:                 # type: ignore[override]
+        return min(self.lb_apothem(), self.ub_apothem())
 
     
-    def get_interval(self):
+    def get_interval(self) -> interval.Interval:
         """
-            Conversions:
-            ============
-            Returns itself. Dummy function for compatability with
-            cyclic guarantees.
+        **Conversions:**
+        
+        Returns itself. Dummy function for compatability with
+        cyclic guarantees.
         """
 
-        return self
+        return interval.Interval(self.lb, self.ub)
 
 
 class TopParallelGuarantee(ParallelepipedalGuarantee):
     ## Constructor
     def __init__(
             self,
-            x_star,
-            c_star,
-            delta,
-            domain
+            x_star: np.ndarray,
+            c_star: int,
+            delta: float,
+            domain: interval.Interval
         ):
         ## Initializing super-class with the whole IR^d
         super().__init__(x_star, c_star, delta, domain)
@@ -500,10 +544,10 @@ class BottomParallelGurantee(ParallelepipedalGuarantee):
     ## Constructor
     def __init__(
             self,
-            x_star,
-            c_star,
-            delta,
-            domain
+            x_star: np.ndarray,
+            c_star: int,
+            delta: float,
+            domain: interval.Interval
         ):
         ## Initializing super-class with the whole IR^d
         super().__init__(x_star, c_star, delta, domain)
@@ -521,11 +565,11 @@ class DistParallelGurantee(ParallelepipedalGuarantee):
     ## Constructor
     def __init__(
             self,
-            x_star,
-            c_star,
-            radius,
-            delta,
-            domain,
+            x_star: np.ndarray,
+            c_star: int,
+            radius: float,
+            delta: float,
+            domain: interval.Interval,
         ):
         ## Initializing super-class with the whole IR^d
         super().__init__(
@@ -545,11 +589,11 @@ class TopDistParallelGurantee(DistParallelGurantee):
     ## Constructor
     def __init__(
             self,
-            x_star,
-            c_star,
-            radius,
-            delta,
-            domain
+            x_star: np.ndarray,
+            c_star: int,
+            radius: float,
+            delta: float,
+            domain: interval.Interval,
         ):
         ## Initializing super-class with the whole IR^d
         super().__init__(x_star, c_star, radius, delta, domain)
@@ -563,11 +607,11 @@ class BottomDistParallelGurantee(DistParallelGurantee):
     ## Constructor
     def __init__(
             self,
-            x_star,
-            c_star,
-            radius,
-            delta,
-            domain
+            x_star: np.ndarray,
+            c_star: int,
+            radius: float,
+            delta: float,
+            domain: interval.Interval,
         ):
         ## Initializing super-class with the whole IR^d
         super().__init__(x_star, c_star, radius, delta, domain)
