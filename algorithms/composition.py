@@ -90,7 +90,7 @@ class AlgoComposition(SearchAlgorithm):
         guarantee = self.algo1_prep(guarantee)
 
         self.print("\nApplying algo. 1: " + self.algo1.msg_prefix + "\n")
-        guarantee = self.algo1.search(copy(guarantee))
+        guarantee = self.algo1.search(copy(guarantee))                          # type: ignore[attr-defined] # MyPy
 
         ## preparing the explanation for the bu-d-dfs algorithm
         #guarantee.update_pivots()
@@ -99,7 +99,7 @@ class AlgoComposition(SearchAlgorithm):
         guarantee = self.algo2_prep(guarantee)
 
         self.print("\nApplying algo. 2: " + self.algo2.msg_prefix + "\n")
-        guarantee = self.algo2.search(copy(guarantee))
+        guarantee = self.algo2.search(copy(guarantee))                          # type: ignore[attr-defined] # MyPy
 
         self.total_time = self.algo1.total_time +   self.algo2.total_time
         self.soundness  = self.algo1.soundness  and self.algo2.soundness
@@ -130,7 +130,7 @@ class ParallelAlgoComposition(AlgoComposition):
 
     def algo1_prep(
             self,
-            guarantee: parallel.ParallelepipedalGuarantee
+            guarantee: parallel.ParallelepipedalGuarantee                       # type: ignore[override] # MyPy
         ) -> parallel.ParallelepipedalGuarantee:
         """
             #### Description:
@@ -142,7 +142,7 @@ class ParallelAlgoComposition(AlgoComposition):
 
     def algo2_prep(
             self,
-            guarantee: parallel.ParallelepipedalGuarantee
+            guarantee: parallel.ParallelepipedalGuarantee                       # type: ignore[override] # MyPy
         ) -> parallel.ParallelepipedalGuarantee:
         """
             #### Description:
@@ -155,7 +155,7 @@ class ParallelAlgoComposition(AlgoComposition):
 
     ## type conversion (identical function)
     def type_conversion(self,
-            guarantee: parallel.ParallelepipedalGuarantee
+            guarantee: parallel.ParallelepipedalGuarantee                       # type: ignore[override] # MyPy
         ) -> parallel.ParallelepipedalGuarantee:
         """
             #### Description:
@@ -181,7 +181,7 @@ class CyclicAlgoComposition(AlgoComposition):
 
     def algo1_prep(
             self,
-            guarantee: cyclic.CyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee                                   # type: ignore[override] # MyPy
         ) -> cyclic.CyclicGuarantee:
         """
             #### Description:
@@ -193,7 +193,7 @@ class CyclicAlgoComposition(AlgoComposition):
 
     def algo2_prep(
             self,
-            guarantee: cyclic.CyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee                                   # type: ignore[override] # MyPy
         ) -> cyclic.CyclicGuarantee:
         """
             #### Description:
@@ -204,7 +204,7 @@ class CyclicAlgoComposition(AlgoComposition):
 
     ## type conversion (identical function)
     def type_conversion(self,
-            guarantee: cyclic.CyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee                                   #  type: ignore[override] # MyPy
         ) -> cyclic.CyclicGuarantee:
         """
             #### Description:
@@ -230,7 +230,7 @@ class CyclicParallelAlgoComposition(AlgoComposition):
     
     def algo1_prep(
             self,
-            guarantee: cyclic.CyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee                                   # type: ignore[override] # MyPy
         ) -> cyclic.CyclicGuarantee:
         """
             #### Description:
@@ -242,7 +242,7 @@ class CyclicParallelAlgoComposition(AlgoComposition):
 
     def algo2_prep(
             self,
-            guarantee: parallel.ParallelepipedalGuarantee
+            guarantee: parallel.ParallelepipedalGuarantee                       # type: ignore[override] # MyPy
         ) -> parallel.ParallelepipedalGuarantee:
         """
             #### Description:
@@ -255,7 +255,7 @@ class CyclicParallelAlgoComposition(AlgoComposition):
 
     ## type conversion (identical function)
     def type_conversion(self,
-            guarantee: cyclic.CyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee                                   # type: ignore[override] # MyPy
         ) -> parallel.ParallelepipedalGuarantee:
         """
             #### Description:

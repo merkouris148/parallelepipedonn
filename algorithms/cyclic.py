@@ -3,7 +3,7 @@
 #############
 
 # libraries for typing
-import typing
+import typing as t
 from verification.nn_verification import NNVerification
 
 # custom libraries
@@ -11,7 +11,6 @@ from algorithms.algorithms import SearchAlgorithm
 import guarantees.cyclic as cyclic
 
 # python libraries
-import time
 from copy import copy
 
 
@@ -28,10 +27,16 @@ class CyclicSearch(SearchAlgorithm):
             isSAT:      NNVerification,
             max_it:     int = 1000,
             timeout:    int = 60,
-            verbose:    bool = False
+            verbose:    bool = False,
+            log_file: t.Optional[str]   = None
         ) -> None:
         
         super().__init__(isSAT, max_it, timeout, verbose)
+
+        ## log file
+        self.log_file = log_file
+        # a quick patch merk. 10/6/2026
+        if self.log_file is not None: self.log_file += ".log"
 
     def search(
             self,
@@ -67,10 +72,11 @@ class TopDownSearch(CyclicSearch):
                     isSAT,
                     max_it = 1000,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
         self.msg_prefix = "Cyc. Top-Down " + self.msg_prefix
@@ -79,7 +85,7 @@ class TopDownSearch(CyclicSearch):
 
     def search(
             self,
-            guarantee: cyclic.TopCyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee
         ) -> cyclic.CyclicGuarantee:
         # time
         self.timer_start()
@@ -88,7 +94,10 @@ class TopDownSearch(CyclicSearch):
         # num_it counts the number of oracle calls
         for self.num_it in range(self.max_it):
             ## Check convergance
-            self.soundness, counterexample = self.isSAT(guarantee.get_interval())
+            self.soundness, counterexample = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.center
+                )
             if self.soundness: break
 
             ## Refine the explanation
@@ -97,7 +106,13 @@ class TopDownSearch(CyclicSearch):
 
 
             ## Reporting
-            self.progress_message()
+            self.progress_message(
+                guarantee.delta,
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                self.log_file
+            )
 
             # time
             if self.check_timeout(): break
@@ -133,10 +148,11 @@ class BottomUpLinearSearch(CyclicSearch):
                     isSAT,
                     max_it = 1000,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
         self.msg_prefix = "Cyc. Bottom-Up " + self.msg_prefix
@@ -145,7 +161,7 @@ class BottomUpLinearSearch(CyclicSearch):
 
     def search(
             self,
-            guarantee: cyclic.BottomCyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee
         ) -> cyclic.CyclicGuarantee:
         # time
         self.timer_start()
@@ -162,7 +178,10 @@ class BottomUpLinearSearch(CyclicSearch):
             if not self.refinement_success: break
 
             ## Check convergance
-            self.soundness, _ = self.isSAT(guarantee.get_interval())
+            self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.center
+                )
             if not self.soundness:
                 # Since we start with the trivial guarantee and expand
                 # the guarantee will always be sound, until a counter
@@ -173,7 +192,13 @@ class BottomUpLinearSearch(CyclicSearch):
                 break
 
             ## Reporting
-            self.progress_message()
+            self.progress_message(
+                guarantee.delta,
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                self.log_file
+            )
 
             # time
             if self.check_timeout(): break
@@ -203,10 +228,11 @@ class BottomUpDichotomicSearch(CyclicSearch):
                     isSAT,
                     max_it = 1000,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
         self.msg_prefix = "Cyc. Bottom-Up Dich. " + self.msg_prefix
@@ -215,7 +241,7 @@ class BottomUpDichotomicSearch(CyclicSearch):
 
     def search(
             self,
-            guarantee: cyclic.BottomCyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee
         ) -> cyclic.CyclicGuarantee:
         # time
         self.timer_start()
@@ -232,10 +258,20 @@ class BottomUpDichotomicSearch(CyclicSearch):
 
             ## Reporting
             self.num_it += 1
-            self.progress_message()
+            ## Reporting
+            self.progress_message(
+                guarantee.delta,
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                self.log_file
+            )
 
             ## Check convergance
-            self.soundness, _ = self.isSAT(guarantee.get_interval())
+            self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.center
+                )
             if self.soundness:
                 succ_pivot_refinement = guarantee.up_pivot()
                 if not succ_pivot_refinement: break
@@ -270,22 +306,23 @@ class BottomUpDichotomicSearch(CyclicSearch):
 
 class CompleteBottomUpDichotomicSearch(CyclicSearch):
     """
-        #### Desrciption:
-        * A search algorithm implementing a bottom up dichotomic
-        search in the space of guarantees.
-        * The guarantee passed to the search() method needs to
-        have defined an `expand_dichotomic()` method.
+        **Desrciption:**
+
+        * A search algorithm implementing a bottom up dichotomic search in the space of guarantees.
+        * The guarantee passed to the search() method needs to have defined an `expand_dichotomic()` method.
         * Primarly used for cyclic guarantees
+
     """
     def __init__(
                     self,
                     isSAT,
                     max_it = 1000,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
         self.msg_prefix = "Complete Cyc. Bottom-Up Dich. " + self.msg_prefix
@@ -294,7 +331,7 @@ class CompleteBottomUpDichotomicSearch(CyclicSearch):
 
     def search(
             self,
-            guarantee: cyclic.BottomCyclicGuarantee
+            guarantee: cyclic.CyclicGuarantee
         ) -> cyclic.CyclicGuarantee:
         # time
         self.timer_start()
@@ -311,10 +348,20 @@ class CompleteBottomUpDichotomicSearch(CyclicSearch):
 
             ## Reporting
             self.num_it += 1
-            self.progress_message()
+            ## Reporting
+            self.progress_message(
+                guarantee.delta,
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                guarantee.get_radius(),
+                self.log_file
+            )
 
             ## Check convergance
-            self.completeness, _ = self.isSAT(guarantee.get_interval())
+            self.completeness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.center
+                )
             if self.completeness:
                 succ_pivot_refinement = guarantee.down_pivot()
                 if not succ_pivot_refinement: break

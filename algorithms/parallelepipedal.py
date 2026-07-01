@@ -2,20 +2,24 @@
 # Libraries #
 #############
 # custom libraries
-from algorithms.algorithms import SearchAlgorithm
+import algorithms.algorithms as algo
 
 # libraries for typing
-import typing
+#import typing
 from verification.nn_verification import NNVerification
 import guarantees.parallelepipedal as parallel
 import numpy as np
 
 # python libraries
-import time
-from copy import copy
+#import time
+#from copy import copy
 
+import typing as t
 
-class ParallelepipedalSearch(SearchAlgorithm):
+# custom
+#import algorithms.delta_schedule as delta_schedule
+
+class ParallelepipedalSearch(algo.SearchAlgorithm):
     """
         Description:
         The top class of search algorithms for parallelepipedal guarantees.
@@ -26,11 +30,17 @@ class ParallelepipedalSearch(SearchAlgorithm):
     def __init__(
             self,
             isSAT:      NNVerification,
-            max_it:     int = 1000,
-            timeout:    int = 60,
-            verbose:    bool = False
+            max_it                      = 1000,   # max number of iterations
+            timeout                     = 60,
+            verbose                     = False,
+            log_file: t.Optional[str]   = None
         ):
         super().__init__(isSAT, max_it, timeout, verbose)
+
+        ## log file
+        self.log_file = log_file
+        # a quick patch merk. 10/6/2026
+        if self.log_file is not None: self.log_file += ".log"
     
     def search(
             self,
@@ -38,7 +48,6 @@ class ParallelepipedalSearch(SearchAlgorithm):
         ) -> parallel.ParallelepipedalGuarantee:
         
         raise NotImplementedError
-
 
 ####################
 # Top-Down Methods #
@@ -58,41 +67,60 @@ class TopDownSearch(ParallelepipedalSearch):
     def __init__(
                     self,
                     isSAT,
-                    max_it  = 1000,   # max number of iterations
-                    timeout = 60,
-                    verbose = False
+                    max_it                      = 1000,   # max number of iterations
+                    timeout                     = 60,
+                    verbose                     = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
-        self.msg_prefix = "Top-Down " + self.msg_prefix
-        self.prop_name  = "Soundness"
+        self.msg_prefix += "Top-Down "
+        self.prop_name  += algo.oracle_properties_str[algo.soundness_property]
     
 
     def search(
             self,
-            guarantee: typing.Union[
-                parallel.TopParallelGuarantee,
-                parallel.TopDistParallelGurantee
-            ]
+            guarantee: parallel.ParallelepipedalGuarantee
         ) -> parallel.ParallelepipedalGuarantee:
         # time
         self.timer_start()
+
+        # ds = delta_schedule.DeltaSchedule(
+        #     guarantee.domain.diam() / 2,
+        #     guarantee.delta,
+        #     int(2 * (self.max_it / 3))
+        # )
+        # guarantee.delta = ds.current()
 
         # main loop
         # num_it counts the number of oracle calls
         for self.num_it in range(self.max_it):
             ## Check convergance
-            self.soundness, counterexample = self.isSAT(guarantee.get_interval())
+            self.soundness, counterexample = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
             if self.soundness: break
 
             ## Refine the explanation
-            self.refinement_success = guarantee.constrain(counterexample)
+            self.refinement_success = guarantee.constrain(counterexample)          # type: ignore[arg-type] # MyPy
             if not self.refinement_success: break
 
+            ## Delta Schedule
+            # guarantee.delta = ds.current()
+            # ds.update()
+
             ## Reporting
-            self.progress_message()
+            self.progress_message(
+                guarantee.apothem(),
+                guarantee.avg_edge_len(),
+                guarantee.diam(),
+                guarantee.min_edge_len(),
+                self.log_file
+            )
+            
 
             ## Check Timeout
             if self.check_timeout(): break
@@ -100,6 +128,9 @@ class TopDownSearch(ParallelepipedalSearch):
 
         # time
         self.timer_stop()
+
+        ## Iterations Out
+        self.check_iterations_out()
 
         ## Warning
         self.end_report()
@@ -129,22 +160,20 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
                     isSAT,
                     max_it = 1000,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
-        self.msg_prefix = "Complete Bottom-Up " + self.msg_prefix
-        self.prop_name  = "Completeness"
+        self.msg_prefix += "Complete Bottom-Up "
+        self.prop_name  += algo.oracle_properties_str[algo.completeness_property]
 
 
     def search(
             self,
-            guarantee: typing.Union[
-                parallel.BottomParallelGurantee,
-                parallel.BottomDistParallelGurantee
-            ]
+            guarantee: parallel.ParallelepipedalGuarantee
         ) -> parallel.ParallelepipedalGuarantee:
         # time
         self.timer_start()
@@ -153,15 +182,24 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
         # num_it counts the number of oracle calls
         for self.num_it in range(self.max_it):
             ## Check convergance
-            self.completeness, witness = self.isSAT(guarantee.get_interval())
+            self.completeness, witness = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
             if self.completeness: break
 
-            ## Refine the explanation
-            self.refinement_success = guarantee.generalize(witness)
-            if not self.refinement_success: break
-
             ## Reporting
-            self.progress_message()
+            self.progress_message(
+                guarantee.apothem(),
+                guarantee.avg_edge_len(),
+                guarantee.diam(),
+                guarantee.min_edge_len(),
+                self.log_file
+            )
+
+            ## Refine the explanation
+            self.refinement_success = guarantee.generalize(witness)             # type: ignore[arg-type] # MyPy
+            if not self.refinement_success: break
 
             ## Check Timeout
             if self.check_timeout(): break
@@ -169,6 +207,9 @@ class CompleteBottomUpSearch(ParallelepipedalSearch):
 
         # time
         self.timer_stop()
+
+        ## Iterations Out
+        self.check_iterations_out()
 
         ## Warning
         self.end_report()
@@ -204,22 +245,20 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
                     isSAT,
                     max_it = 100,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
-        self.msg_prefix = "Bottom-Up Lin. DFS"
-        self.prop_name  = "Soundness"
+        self.msg_prefix += "Bottom-Up Lin. DFS"
+        self.prop_name  += algo.oracle_properties_str[algo.soundness_property]
     
 
     def search(
             self,
-            guarantee: typing.Union[
-                parallel.BottomParallelGurantee,
-                parallel.BottomDistParallelGurantee
-            ]
+            guarantee: parallel.ParallelepipedalGuarantee
         ) -> parallel.ParallelepipedalGuarantee:
         # time
         self.timer_start()
@@ -239,10 +278,20 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
 
                 ## Reporting
                 self.num_it += 1
-                self.progress_message()
+                ## Reporting
+                self.progress_message(
+                    guarantee.apothem(),
+                    guarantee.avg_edge_len(),
+                    guarantee.diam(),
+                    guarantee.min_edge_len(),
+                    self.log_file
+                )
 
                 ## Check convergance
-                self.soundness, _ = self.isSAT(guarantee.get_interval())
+                self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
                 if not self.soundness:
                     # Since we start with the trivial explanation and expand
                     # the explanation will always be sound, until a counter
@@ -270,10 +319,19 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
 
                     ## Reporting
                     self.num_it += 1
-                    self.progress_message()
-
+                    ## Reporting
+                    self.progress_message(
+                        guarantee.apothem(),
+                        guarantee.avg_edge_len(),
+                        guarantee.diam(),
+                        guarantee.min_edge_len(),
+                        self.log_file
+                    )
                     ## Check convergance
-                    self.soundness, _ = self.isSAT(guarantee.get_interval())
+                    self.soundness, _ = self.isSAT(
+                        guarantee.get_interval(),
+                        guarantee.x_star
+                    )
                     if not self.soundness:
                         # Since we start with the trivial explanation and expand
                         # the explanation will always be sound, until a counter
@@ -290,6 +348,9 @@ class BottomUpLinearDFS(ParallelepipedalSearch):
 
         # time
         self.timer_stop()
+
+        ## Iterations Out
+        self.check_iterations_out()
 
         ## Warning
         self.end_report()
@@ -320,21 +381,19 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
                     isSAT,
                     max_it = 100,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
-        self.msg_prefix = "Bottom-Up Dich. DFS"
-        self.prop_name  = "Soundness"
+        self.msg_prefix += "Bottom-Up Dich. DFS"
+        self.prop_name  += algo.oracle_properties_str[algo.soundness_property]
 
     def search(
             self,
-            guarantee: typing.Union[
-                parallel.BottomParallelGurantee,
-                parallel.BottomDistParallelGurantee
-            ]
+            guarantee: parallel.ParallelepipedalGuarantee
         ) -> parallel.ParallelepipedalGuarantee:
         # time
         self.timer_start()
@@ -357,10 +416,19 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
 
                 ## Reporting
                 self.num_it += 1
-                self.progress_message()
-
+                ## Reporting
+                self.progress_message(
+                    guarantee.apothem(),
+                    guarantee.avg_edge_len(),
+                    guarantee.diam(),
+                    guarantee.min_edge_len(),
+                    self.log_file
+                )
                 ## Check convergance
-                self.soundness, _ = self.isSAT(guarantee.get_interval())
+                self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
                 if self.soundness:
                     self.print_debug(" successful expansion!")
                     succ_pivot_refinement = guarantee.up_high_pivot(ind)
@@ -395,10 +463,19 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
 
                     ## Reporting
                     self.num_it += 1
-                    self.progress_message()
-
+                    ## Reporting
+                    self.progress_message(
+                        guarantee.apothem(),
+                        guarantee.avg_edge_len(),
+                        guarantee.diam(),
+                        guarantee.min_edge_len(),
+                        self.log_file
+                    )
                     ## Check convergance
-                    self.soundness, _ = self.isSAT(guarantee.get_interval())
+                    self.soundness, _ = self.isSAT(
+                        guarantee.get_interval(),
+                        guarantee.x_star
+                    )
                     if self.soundness:
                         self.print_debug(" successful expansion!")
                         succ_pivot_refinement = guarantee.down_low_pivot(ind)
@@ -421,6 +498,9 @@ class BottomUpDichotomicDFS(ParallelepipedalSearch):
         
         # time
         self.timer_stop()
+
+        ## Iterations Out
+        self.check_iterations_out()
 
         ## Warning
         self.end_report()
@@ -448,21 +528,19 @@ class BottomUpBFS(ParallelepipedalSearch):
                     isSAT,
                     max_it = 100,   # max number of iterations
                     timeout = 60,
-                    verbose = False
+                    verbose = False,
+                    log_file: t.Optional[str]   = None
                 ):
         
-        super().__init__(isSAT, max_it, timeout, verbose)
+        super().__init__(isSAT, max_it, timeout, verbose, log_file)
 
         ## Reporting
-        self.msg_prefix = "Bottom-Up BFS "
-        self.prop_name  = "Soundness"
+        self.msg_prefix += "Bottom-Up BFS "
+        self.prop_name  += algo.oracle_properties_str[algo.soundness_property]
 
     def search(
             self,
-            guarantee: typing.Union[
-                parallel.BottomParallelGurantee,
-                parallel.BottomDistParallelGurantee
-            ]
+            guarantee: parallel.ParallelepipedalGuarantee
         ) -> parallel.ParallelepipedalGuarantee:
         # time
         self.timer_start()
@@ -481,10 +559,19 @@ class BottomUpBFS(ParallelepipedalSearch):
 
             ## Reporting
             self.num_it += 1
-            self.progress_message()
-
+            ## Reporting
+            self.progress_message(
+                guarantee.apothem(),
+                guarantee.avg_edge_len(),
+                guarantee.diam(),
+                guarantee.min_edge_len(),
+                self.log_file
+            )
             ## Check convergance
-            self.soundness, _ = self.isSAT(guarantee.get_interval())
+            self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
             if not self.soundness:
                 # Since we start with the trivial explanation and expand
                 # the explanation will always be sound, until a counter
@@ -514,10 +601,19 @@ class BottomUpBFS(ParallelepipedalSearch):
 
                 ## Reporting
                 self.num_it += 1
-                self.progress_message()
-
+                ## Reporting
+                self.progress_message(
+                    guarantee.apothem(),
+                    guarantee.avg_edge_len(),
+                    guarantee.diam(),
+                    guarantee.min_edge_len(),
+                    self.log_file
+                )
                 ## Check convergance
-                self.soundness, _ = self.isSAT(guarantee.get_interval())
+                self.soundness, _ = self.isSAT(
+                    guarantee.get_interval(),
+                    guarantee.x_star
+                )
                 if not self.soundness:
                     # Since we start with the trivial explanation and expand
                     # the explanation will always be sound, until a counter
@@ -536,6 +632,9 @@ class BottomUpBFS(ParallelepipedalSearch):
         
         # time
         self.timer_stop()
+
+        ## Iterations Out
+        self.check_iterations_out()
 
         ## Warning
         self.end_report()
